@@ -77,6 +77,11 @@
         "name": "alert-icons",
         "title": "Alert-Icons",
         "allowedTypes": ["png", "svg", "gif", "webp", "jpg", "jpeg"]
+      },
+      {
+        "name": "alert-videos",
+        "title": "Alert-Videos",
+        "allowedTypes": ["mp4", "webm", "gif"]
       }
     ]
   },

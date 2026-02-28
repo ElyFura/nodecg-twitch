@@ -2,6 +2,7 @@ const alertQueue = nodecg.Replicant('alertQueue');
 const currentAlert = nodecg.Replicant('currentAlert');
 const connectionStatus = nodecg.Replicant('connectionStatus');
 const alertHistory = nodecg.Replicant('alertHistory');
+const settings = nodecg.Replicant('settings');
 
 const queueList = document.getElementById('queue-list');
 const queueCount = document.getElementById('queue-count');
@@ -9,6 +10,8 @@ const currentAlertEl = document.getElementById('current-alert');
 const statusIndicator = document.getElementById('connection-status');
 const statusText = document.getElementById('status-text');
 const historyList = document.getElementById('history-list');
+const togglePause = document.getElementById('toggle-pause');
+const pauseLabel = document.getElementById('pause-label');
 
 const TYPE_LABELS = {
 	follow: 'Follow',
@@ -98,7 +101,21 @@ alertHistory.on('change', (newVal) => {
 	renderHistory(newVal || []);
 });
 
-// Test alert buttons
+// Custom test alert
+document.getElementById('btn-test-custom').addEventListener('click', () => {
+	const type = document.getElementById('test-type').value;
+	const username = document.getElementById('test-username').value.trim();
+	const message = document.getElementById('test-message').value.trim();
+	const amount = document.getElementById('test-amount').value;
+	nodecg.sendMessage('triggerTestAlert', {
+		type,
+		username: username || undefined,
+		message: message || undefined,
+		amount: amount !== '' ? Number(amount) : undefined,
+	});
+});
+
+// Quick-fire test alert buttons
 document.querySelectorAll('.btn-test').forEach((btn) => {
 	btn.addEventListener('click', () => {
 		nodecg.sendMessage('triggerTestAlert', { type: btn.dataset.type });
@@ -122,4 +139,17 @@ document.getElementById('btn-clear-history').addEventListener('click', () => {
 	if (confirm('Alert-Verlauf leeren?')) {
 		nodecg.sendMessage('clearHistory');
 	}
+});
+
+// Pause toggle
+settings.on('change', (newVal) => {
+	if (!newVal) return;
+	const paused = !!newVal.alertsPaused;
+	togglePause.checked = paused;
+	pauseLabel.textContent = paused ? 'Alerts pausiert' : 'Alerts aktiv';
+	pauseLabel.style.color = paused ? '#e74c3c' : '#ccc';
+});
+
+togglePause.addEventListener('change', () => {
+	nodecg.sendMessage('togglePause', { paused: togglePause.checked });
 });

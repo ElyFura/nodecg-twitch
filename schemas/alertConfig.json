@@ -108,6 +108,53 @@
           "minimum": 1,
           "maximum": 10,
           "default": 5
+        },
+        "customCss": {
+          "type": "string",
+          "default": "",
+          "description": "Custom CSS injected when this alert type is shown"
+        },
+        "minAmount": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Minimum amount to trigger alert (bits, viewers, months, gifts)"
+        },
+        "minTier": {
+          "type": "string",
+          "enum": ["", "1000", "2000", "3000"],
+          "default": "",
+          "description": "Minimum sub tier (1000=Tier1, 2000=Tier2, 3000=Tier3)"
+        },
+        "cooldown": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Minimum seconds between alerts of this type"
+        },
+        "backgroundVideo": {
+          "type": "string",
+          "default": "",
+          "description": "URL to a video file used as background"
+        },
+        "ttsEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable text-to-speech for this alert type"
+        },
+        "ttsRate": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.5,
+          "maximum": 2,
+          "description": "TTS speech rate"
+        },
+        "ttsVolume": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "TTS volume"
         }
       }
     }
@@ -134,7 +181,15 @@
       "overlayOpacity": 0.7,
       "animationInDuration": 500,
       "animationOutDuration": 400,
-      "priority": 3
+      "priority": 3,
+      "customCss": "",
+      "minAmount": 0,
+      "minTier": "",
+      "cooldown": 0,
+      "backgroundVideo": "",
+      "ttsEnabled": false,
+      "ttsRate": 1,
+      "ttsVolume": 1
     },
     "sub": {
       "enabled": true,
@@ -157,7 +212,15 @@
       "overlayOpacity": 0.7,
       "animationInDuration": 500,
       "animationOutDuration": 400,
-      "priority": 6
+      "priority": 6,
+      "customCss": "",
+      "minAmount": 0,
+      "minTier": "",
+      "cooldown": 0,
+      "backgroundVideo": "",
+      "ttsEnabled": false,
+      "ttsRate": 1,
+      "ttsVolume": 1
     },
     "resub": {
       "enabled": true,
@@ -180,7 +243,15 @@
       "overlayOpacity": 0.7,
       "animationInDuration": 500,
       "animationOutDuration": 400,
-      "priority": 6
+      "priority": 6,
+      "customCss": "",
+      "minAmount": 0,
+      "minTier": "",
+      "cooldown": 0,
+      "backgroundVideo": "",
+      "ttsEnabled": false,
+      "ttsRate": 1,
+      "ttsVolume": 1
     },
     "subgift": {
       "enabled": true,
@@ -203,7 +274,15 @@
       "overlayOpacity": 0.7,
       "animationInDuration": 500,
       "animationOutDuration": 400,
-      "priority": 7
+      "priority": 7,
+      "customCss": "",
+      "minAmount": 0,
+      "minTier": "",
+      "cooldown": 0,
+      "backgroundVideo": "",
+      "ttsEnabled": false,
+      "ttsRate": 1,
+      "ttsVolume": 1
     },
     "bits": {
       "enabled": true,
@@ -226,7 +305,15 @@
       "overlayOpacity": 0.7,
       "animationInDuration": 500,
       "animationOutDuration": 400,
-      "priority": 5
+      "priority": 5,
+      "customCss": "",
+      "minAmount": 0,
+      "minTier": "",
+      "cooldown": 0,
+      "backgroundVideo": "",
+      "ttsEnabled": false,
+      "ttsRate": 1,
+      "ttsVolume": 1
     },
     "raid": {
       "enabled": true,
@@ -249,7 +336,15 @@
       "overlayOpacity": 0.7,
       "animationInDuration": 500,
       "animationOutDuration": 400,
-      "priority": 8
+      "priority": 8,
+      "customCss": "",
+      "minAmount": 0,
+      "minTier": "",
+      "cooldown": 0,
+      "backgroundVideo": "",
+      "ttsEnabled": false,
+      "ttsRate": 1,
+      "ttsVolume": 1
     },
     "channelpoints": {
       "enabled": true,
@@ -272,7 +367,15 @@
       "overlayOpacity": 0.7,
       "animationInDuration": 500,
       "animationOutDuration": 400,
-      "priority": 2
+      "priority": 2,
+      "customCss": "",
+      "minAmount": 0,
+      "minTier": "",
+      "cooldown": 0,
+      "backgroundVideo": "",
+      "ttsEnabled": false,
+      "ttsRate": 1,
+      "ttsVolume": 1
     }
   }
 }

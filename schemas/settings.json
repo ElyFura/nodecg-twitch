@@ -33,6 +33,11 @@
       "minimum": 0,
       "maximum": 10000,
       "description": "Delay between alerts in milliseconds"
+    },
+    "alertsPaused": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, alerts are paused but queue keeps filling"
     }
   },
   "required": ["clientId", "clientSecret", "channelName"]

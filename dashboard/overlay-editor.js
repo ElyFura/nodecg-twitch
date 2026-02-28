@@ -1,6 +1,7 @@
 const alertConfig = nodecg.Replicant('alertConfig');
 const alertBackgrounds = nodecg.Replicant('assets:alert-backgrounds');
 const alertIcons = nodecg.Replicant('assets:alert-icons');
+const alertVideos = nodecg.Replicant('assets:alert-videos');
 
 const ALERT_TYPES = [
 	{ key: 'follow', label: 'Follow', color: '#6441a5' },
@@ -223,6 +224,54 @@ function buildEditorUI() {
 				<span class="hint-text">1 (niedrig) – 10 (hoch)</span>
 			</div>
 
+			<div class="config-row" style="align-items:flex-start;">
+				<label>Custom CSS</label>
+				<textarea data-field="customCss" rows="3" style="flex:1;font-family:monospace;font-size:12px;resize:vertical;" placeholder="#alert-box { border: 3px solid gold; }&#10;.alert-username { text-transform: uppercase; }"></textarea>
+			</div>
+
+			<div class="config-row">
+				<label>Min. Amount</label>
+				<input type="number" data-field="minAmount" min="0" step="1" value="0" style="max-width:80px;" />
+				<span class="hint-text">0 = kein Filter</span>
+			</div>
+
+			<div class="config-row">
+				<label>Min. Tier</label>
+				<select data-field="minTier" style="max-width:140px;">
+					<option value="">Alle Tiers</option>
+					<option value="1000">Tier 1+</option>
+					<option value="2000">Tier 2+</option>
+					<option value="3000">Nur Tier 3</option>
+				</select>
+			</div>
+
+			<div class="config-row">
+				<label>Cooldown</label>
+				<input type="number" data-field="cooldown" min="0" step="1" value="0" style="max-width:80px;" />
+				<span class="hint-text">Sekunden (0 = kein Cooldown)</span>
+			</div>
+
+			<div class="config-row">
+				<label>Video-BG</label>
+				<select data-field="backgroundVideo">
+					<option value="">Kein Video</option>
+				</select>
+			</div>
+
+			<div class="config-row">
+				<label>TTS</label>
+				<div class="toggle-group">
+					<label class="toggle" style="margin-bottom:0;">
+						<input type="checkbox" data-field="ttsEnabled" autocomplete="off" />
+						<span class="toggle-slider"></span>
+					</label>
+					<span class="hint-text">Rate:</span>
+					<input type="number" data-field="ttsRate" min="0.5" max="2" step="0.1" value="1" style="max-width:60px;" />
+					<span class="hint-text">Vol:</span>
+					<input type="number" data-field="ttsVolume" min="0" max="1" step="0.1" value="1" style="max-width:60px;" />
+				</div>
+			</div>
+
 			<div class="preview-container">
 				<div class="preview-label">Vorschau</div>
 				<div class="preview-box" data-preview="${key}">
@@ -261,7 +310,7 @@ function buildEditorUI() {
 	});
 
 	// Live update listeners on all config inputs
-	container.querySelectorAll('input, select').forEach((input) => {
+	container.querySelectorAll('input, select, textarea').forEach((input) => {
 		const section = input.closest('[data-type]');
 		if (!section) return;
 		const key = section.dataset.type;
@@ -470,6 +519,34 @@ function loadConfig(config) {
 		const priorityInput = section.querySelector('[data-field="priority"]');
 		if (priorityInput) priorityInput.value = typeConfig.priority !== undefined ? typeConfig.priority : (DEFAULT_PRIORITIES[key] || 5);
 
+		// Custom CSS
+		const customCssInput = section.querySelector('[data-field="customCss"]');
+		if (customCssInput) customCssInput.value = typeConfig.customCss || '';
+
+		// Filters & Cooldown
+		const minAmountInput = section.querySelector('[data-field="minAmount"]');
+		if (minAmountInput) minAmountInput.value = typeConfig.minAmount || 0;
+
+		const minTierInput = section.querySelector('[data-field="minTier"]');
+		if (minTierInput) minTierInput.value = typeConfig.minTier || '';
+
+		const cooldownInput = section.querySelector('[data-field="cooldown"]');
+		if (cooldownInput) cooldownInput.value = typeConfig.cooldown || 0;
+
+		// Video background
+		const bgVideoInput = section.querySelector('[data-field="backgroundVideo"]');
+		if (bgVideoInput) bgVideoInput.value = typeConfig.backgroundVideo || '';
+
+		// TTS
+		const ttsEnabledInput = section.querySelector('[data-field="ttsEnabled"]');
+		if (ttsEnabledInput) ttsEnabledInput.checked = !!typeConfig.ttsEnabled;
+
+		const ttsRateInput = section.querySelector('[data-field="ttsRate"]');
+		if (ttsRateInput) ttsRateInput.value = typeConfig.ttsRate !== undefined ? typeConfig.ttsRate : 1;
+
+		const ttsVolumeInput = section.querySelector('[data-field="ttsVolume"]');
+		if (ttsVolumeInput) ttsVolumeInput.value = typeConfig.ttsVolume !== undefined ? typeConfig.ttsVolume : 1;
+
 		updatePreview(key);
 	});
 }
@@ -503,6 +580,14 @@ function saveConfig() {
 			animationInDuration: parseInt(section.querySelector('[data-field="animationInDuration"]').value) || 500,
 			animationOutDuration: parseInt(section.querySelector('[data-field="animationOutDuration"]').value) || 400,
 			priority: parseInt(section.querySelector('[data-field="priority"]').value) || (DEFAULT_PRIORITIES[key] || 5),
+			customCss: section.querySelector('[data-field="customCss"]').value || '',
+			minAmount: parseInt(section.querySelector('[data-field="minAmount"]').value) || 0,
+			minTier: section.querySelector('[data-field="minTier"]').value || '',
+			cooldown: parseInt(section.querySelector('[data-field="cooldown"]').value) || 0,
+			backgroundVideo: section.querySelector('[data-field="backgroundVideo"]').value || '',
+			ttsEnabled: section.querySelector('[data-field="ttsEnabled"]').checked,
+			ttsRate: parseFloat(section.querySelector('[data-field="ttsRate"]').value) || 1,
+			ttsVolume: parseFloat(section.querySelector('[data-field="ttsVolume"]').value),
 		};
 	});
 
@@ -562,6 +647,26 @@ function populateIconSelects(assets) {
 	});
 }
 
+function populateVideoSelects(assets) {
+	container.querySelectorAll('[data-field="backgroundVideo"]').forEach((select) => {
+		const currentValue = select.value;
+		while (select.options.length > 1) {
+			select.remove(1);
+		}
+		assets.forEach((asset) => {
+			const option = document.createElement('option');
+			option.value = asset.url;
+			option.textContent = asset.name + '.' + asset.ext;
+			select.appendChild(option);
+		});
+		if (currentValue && [...select.options].some((o) => o.value === currentValue)) {
+			select.value = currentValue;
+		} else {
+			select.value = '';
+		}
+	});
+}
+
 // Build UI
 buildEditorUI();
 
@@ -582,6 +687,178 @@ alertIcons.on('change', (newVal) => {
 	if (alertConfig.value) loadConfig(alertConfig.value);
 });
 
+// Populate video selects when assets change
+alertVideos.on('change', (newVal) => {
+	populateVideoSelects(newVal || []);
+	if (alertConfig.value) loadConfig(alertConfig.value);
+});
+
 // Save buttons
 btnSave.addEventListener('click', saveConfig);
 btnSaveTop.addEventListener('click', saveConfig);
+
+// --- Config Export/Import ---
+const VALID_ALERT_KEYS = ALERT_TYPES.map((t) => t.key);
+const fileInput = document.getElementById('import-file-input');
+
+function exportConfig() {
+	const data = JSON.stringify(alertConfig.value, null, 2);
+	const blob = new Blob([data], { type: 'application/json' });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	const date = new Date().toISOString().slice(0, 10);
+	a.href = url;
+	a.download = `alertConfig-${date}.json`;
+	a.click();
+	URL.revokeObjectURL(url);
+}
+
+function importConfig(file) {
+	const reader = new FileReader();
+	reader.onload = (e) => {
+		try {
+			const parsed = JSON.parse(e.target.result);
+			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+				alert('Ungültige Config-Datei: Erwartet wird ein JSON-Objekt.');
+				return;
+			}
+			const cleaned = {};
+			for (const key of VALID_ALERT_KEYS) {
+				if (parsed[key] && typeof parsed[key] === 'object') {
+					cleaned[key] = parsed[key];
+				}
+			}
+			if (Object.keys(cleaned).length === 0) {
+				alert('Keine gültigen Alert-Typen in der Datei gefunden.');
+				return;
+			}
+			alertConfig.value = cleaned;
+			loadConfig(cleaned);
+		} catch {
+			alert('Fehler beim Lesen der Datei: Ungültiges JSON.');
+		}
+	};
+	reader.readAsText(file);
+}
+
+document.getElementById('btn-export-config-top').addEventListener('click', exportConfig);
+document.getElementById('btn-export-config').addEventListener('click', exportConfig);
+
+document.getElementById('btn-import-config-top').addEventListener('click', () => fileInput.click());
+document.getElementById('btn-import-config').addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', () => {
+	if (fileInput.files.length > 0) {
+		importConfig(fileInput.files[0]);
+		fileInput.value = '';
+	}
+});
+
+// --- Alert Themes/Presets ---
+const THEME_BASE = {
+	enabled: true, duration: 5000, soundEnabled: true, backgroundImage: '', backgroundVideo: '',
+	iconUrl: '', textShadow: false, textShadowColor: '#000000', textOutline: false,
+	textOutlineColor: '#000000', overlayOpacity: 0.7, animationInDuration: 500,
+	animationOutDuration: 400, customCss: '', minAmount: 0, minTier: '', cooldown: 0,
+	ttsEnabled: false, ttsRate: 1, ttsVolume: 1,
+};
+
+const THEMES = {
+	neon: {
+		_visual: {
+			backgroundColor: '#0f0f23', textColor: '#00ffff', accentColor: '#ff00ff',
+			animation: 'fade', fontFamily: 'Bangers', fontSize: 28,
+			textShadow: true, textShadowColor: '#00ffff', position: 'bottom-center',
+		},
+		follow: { priority: 3 },
+		sub: { priority: 6, duration: 6000, accentColor: '#39ff14' },
+		resub: { priority: 6, duration: 6000, accentColor: '#39ff14' },
+		subgift: { priority: 7, duration: 6000, accentColor: '#39ff14' },
+		bits: { priority: 5, duration: 6000, backgroundColor: '#1a0033', accentColor: '#ffd700' },
+		raid: { priority: 8, duration: 8000, backgroundColor: '#1a0011', accentColor: '#ff0066' },
+		channelpoints: { priority: 2, accentColor: '#00ff88' },
+	},
+	retro: {
+		_visual: {
+			backgroundColor: '#2d1b00', textColor: '#ffa500', accentColor: '#ff6600',
+			animation: 'slide', fontFamily: 'Press Start 2P', fontSize: 18,
+			position: 'top-center',
+		},
+		follow: { priority: 3 },
+		sub: { priority: 6, duration: 6000 },
+		resub: { priority: 6, duration: 6000 },
+		subgift: { priority: 7, duration: 6000 },
+		bits: { priority: 5, duration: 6000, backgroundColor: '#1a1a00', accentColor: '#ffcc00' },
+		raid: { priority: 8, duration: 8000, backgroundColor: '#330000', accentColor: '#ff4444' },
+		channelpoints: { priority: 2, accentColor: '#44ff44' },
+	},
+	minimal: {
+		_visual: {
+			backgroundColor: '#ffffff', textColor: '#333333', accentColor: '#666666',
+			animation: 'fade', fontFamily: 'Poppins', fontSize: 22,
+			textShadow: false, position: 'bottom-center',
+		},
+		follow: { priority: 3 },
+		sub: { priority: 6, duration: 6000 },
+		resub: { priority: 6, duration: 6000 },
+		subgift: { priority: 7, duration: 6000 },
+		bits: { priority: 5, duration: 6000, accentColor: '#ff8c00' },
+		raid: { priority: 8, duration: 8000, accentColor: '#e91916' },
+		channelpoints: { priority: 2, accentColor: '#00c896' },
+	},
+	default: {
+		_visual: {
+			backgroundColor: '#6441a5', textColor: '#ffffff', accentColor: '#b9a3e3',
+			animation: 'slide', fontFamily: '', fontSize: 24,
+			textShadow: false, position: 'bottom-center',
+		},
+		follow: { priority: 3 },
+		sub: { priority: 6, duration: 6000, animation: 'bounce' },
+		resub: { priority: 6, duration: 6000, animation: 'bounce' },
+		subgift: { priority: 7, duration: 6000, animation: 'bounce' },
+		bits: { priority: 5, duration: 6000, backgroundColor: '#ff8c00', accentColor: '#ffd700', animation: 'bounce' },
+		raid: { priority: 8, duration: 8000, backgroundColor: '#e91916', accentColor: '#ff6b6b' },
+		channelpoints: { priority: 2, backgroundColor: '#00c896', accentColor: '#7affc8', animation: 'fade' },
+	},
+};
+
+function applyTheme(themeName) {
+	const theme = THEMES[themeName];
+	if (!theme) return;
+
+	const visual = theme._visual || {};
+	const current = alertConfig.value ? JSON.parse(JSON.stringify(alertConfig.value)) : {};
+	const newConfig = {};
+
+	ALERT_TYPES.forEach(({ key }) => {
+		const existing = current[key] || {};
+		const typeOverrides = theme[key] || {};
+		newConfig[key] = {
+			...THEME_BASE,
+			...visual,
+			// Preserve message templates from current config
+			messageTemplate: existing.messageTemplate || THEME_BASE.messageTemplate || '{username}',
+			// Apply type-specific overrides
+			...typeOverrides,
+			// Preserve non-visual settings from current config
+			enabled: existing.enabled !== undefined ? existing.enabled : true,
+			minAmount: existing.minAmount || 0,
+			minTier: existing.minTier || '',
+			cooldown: existing.cooldown || 0,
+			ttsEnabled: existing.ttsEnabled || false,
+			ttsRate: existing.ttsRate || 1,
+			ttsVolume: existing.ttsVolume !== undefined ? existing.ttsVolume : 1,
+		};
+	});
+
+	alertConfig.value = newConfig;
+	loadConfig(newConfig);
+}
+
+document.querySelectorAll('.btn-theme').forEach((btn) => {
+	btn.addEventListener('click', () => {
+		if (confirm(`Theme "${btn.dataset.theme}" anwenden? Visuelle Einstellungen werden überschrieben.`)) {
+			applyTheme(btn.dataset.theme);
+		}
+	});
+});

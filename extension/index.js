@@ -277,12 +277,42 @@ module.exports = function (nodecg) {
 		}
 	}
 
+	// --- Cooldown tracking ---
+	const lastAlertTime = {};
+
 	// --- Alert Queue Management ---
 	function pushAlert(data) {
 		const config = alertConfig.value[data.type];
 		if (config && !config.enabled) {
 			nodecg.log.info(`Alert "${data.type}" deaktiviert, wird übersprungen.`);
 			return;
+		}
+
+		// Check minimum amount threshold
+		if (config && config.minAmount > 0 && (data.amount || 0) < config.minAmount) {
+			nodecg.log.info(`Alert "${data.type}" unter Schwellwert (${data.amount || 0} < ${config.minAmount}), übersprungen.`);
+			return;
+		}
+
+		// Check minimum tier threshold (sub, resub, subgift)
+		if (config && config.minTier && data.tier) {
+			if (parseInt(data.tier) < parseInt(config.minTier)) {
+				nodecg.log.info(`Alert "${data.type}" unter Tier-Schwellwert (${data.tier} < ${config.minTier}), übersprungen.`);
+				return;
+			}
+		}
+
+		// Check cooldown
+		if (config && config.cooldown > 0) {
+			const now = Date.now();
+			const last = lastAlertTime[data.type] || 0;
+			if (now - last < config.cooldown * 1000) {
+				nodecg.log.info(`Alert "${data.type}" im Cooldown (${Math.round((config.cooldown * 1000 - (now - last)) / 1000)}s übrig), übersprungen.`);
+				return;
+			}
+			lastAlertTime[data.type] = now;
+		} else {
+			lastAlertTime[data.type] = Date.now();
 		}
 
 		// Determine priority from config or defaults
@@ -321,6 +351,10 @@ module.exports = function (nodecg) {
 	}
 
 	function showNextAlert() {
+		if (settings.value.alertsPaused) {
+			return;
+		}
+
 		if (alertQueue.value.length === 0) {
 			currentAlert.value = null;
 			return;
@@ -346,7 +380,7 @@ module.exports = function (nodecg) {
 
 	// --- Messages from Dashboard ---
 	nodecg.listenFor('triggerTestAlert', (data) => {
-		const testData = {
+		const testDefaults = {
 			follow: { type: 'follow', username: 'TestUser', message: '', amount: 0 },
 			sub: { type: 'sub', username: 'TestUser', message: '', amount: 0, tier: '1000' },
 			resub: { type: 'resub', username: 'TestUser', message: 'Bin schon 12 Monate dabei!', amount: 12, tier: '1000' },
@@ -356,8 +390,11 @@ module.exports = function (nodecg) {
 			channelpoints: { type: 'channelpoints', username: 'TestUser', message: 'Hydrate!', amount: 500 },
 		};
 
-		const alertData = testData[data.type];
+		const alertData = testDefaults[data.type];
 		if (alertData) {
+			if (data.username) alertData.username = data.username;
+			if (data.message) alertData.message = data.message;
+			if (data.amount !== undefined && data.amount !== '') alertData.amount = Number(data.amount);
 			pushAlert(alertData);
 		}
 	});
@@ -375,6 +412,14 @@ module.exports = function (nodecg) {
 	nodecg.listenFor('clearHistory', () => {
 		alertHistory.value = [];
 		nodecg.log.info('Alert-Verlauf geleert.');
+	});
+
+	nodecg.listenFor('togglePause', (data) => {
+		settings.value.alertsPaused = !!data.paused;
+		nodecg.log.info(`Alerts ${data.paused ? 'pausiert' : 'fortgesetzt'}.`);
+		if (!data.paused && !currentAlert.value && alertQueue.value.length > 0) {
+			showNextAlert();
+		}
 	});
 
 	nodecg.listenFor('reconnect', async () => {

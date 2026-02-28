@@ -9,6 +9,7 @@ const alertUsername = document.getElementById('alert-username');
 const alertMessage = document.getElementById('alert-message');
 const alertAccentBar = document.getElementById('alert-accent-bar');
 const alertBgOverlay = document.getElementById('alert-bg-overlay');
+const alertBgVideo = document.getElementById('alert-bg-video');
 
 const TYPE_INFO = {
 	follow: { label: 'Neuer Follower', icon: '❤️' },
@@ -29,6 +30,7 @@ function hexToRgba(hex, alpha) {
 
 let isShowing = false;
 let hideTimeout = null;
+let customStyleEl = null;
 
 // --- Google Fonts loader ---
 const loadedFonts = new Set();
@@ -140,12 +142,24 @@ function showAlert(alert) {
 	const bgImage = config.backgroundImage || '';
 	const overlayOpacity = config.overlayOpacity !== undefined ? config.overlayOpacity : 0.7;
 
-	if (bgImage) {
+	// Video background
+	const bgVideo = config.backgroundVideo || '';
+	if (bgVideo) {
+		alertBgVideo.src = bgVideo;
+		alertBgVideo.style.display = 'block';
+		alertBgVideo.play().catch(() => {});
+		alertBox.style.backgroundColor = 'transparent';
+		alertBox.style.backgroundImage = 'none';
+		alertBox.classList.add('has-bg-image');
+		alertBgOverlay.style.backgroundColor = hexToRgba(bgColor, overlayOpacity);
+	} else if (bgImage) {
+		alertBgVideo.style.display = 'none';
 		alertBox.style.backgroundColor = 'transparent';
 		alertBox.style.backgroundImage = `url(${bgImage})`;
 		alertBox.classList.add('has-bg-image');
 		alertBgOverlay.style.backgroundColor = hexToRgba(bgColor, overlayOpacity);
 	} else {
+		alertBgVideo.style.display = 'none';
 		alertBox.style.backgroundColor = bgColor;
 		alertBox.style.backgroundImage = 'none';
 	}
@@ -191,6 +205,33 @@ function showAlert(alert) {
 		}
 	}
 
+	// TTS (Text-to-Speech)
+	if (config.ttsEnabled && window.speechSynthesis) {
+		const ttsText = (config.messageTemplate || '{username}')
+			.replace(/\{username\}/g, alert.username || '')
+			.replace(/\{amount\}/g, String(alert.amount || 0))
+			.replace(/\{message\}/g, alert.message || '')
+			.replace(/\{tier\}/g, alert.tier || '');
+		if (ttsText.trim()) {
+			const utterance = new SpeechSynthesisUtterance(ttsText);
+			utterance.rate = config.ttsRate || 1;
+			utterance.volume = config.ttsVolume !== undefined ? config.ttsVolume : 1;
+			utterance.lang = 'de-DE';
+			window.speechSynthesis.speak(utterance);
+		}
+	}
+
+	// Inject custom CSS if defined
+	if (customStyleEl) {
+		customStyleEl.remove();
+		customStyleEl = null;
+	}
+	if (config.customCss) {
+		customStyleEl = document.createElement('style');
+		customStyleEl.textContent = config.customCss;
+		document.head.appendChild(customStyleEl);
+	}
+
 	// Set entrance animation duration
 	alertBox.style.animationDuration = (animInDuration / 1000) + 's';
 
@@ -209,6 +250,11 @@ function showAlert(alert) {
 function hideAlert(animation, animOutDuration) {
 	if (animOutDuration === undefined) animOutDuration = 400;
 
+	// Cancel any ongoing TTS
+	if (window.speechSynthesis) {
+		window.speechSynthesis.cancel();
+	}
+
 	// Remove entrance animation, add exit
 	alertBox.className = 'visible';
 	alertBox.style.animationDuration = (animOutDuration / 1000) + 's';
@@ -224,6 +270,13 @@ function hideAlert(animation, animOutDuration) {
 		alertUsername.style.fontSize = '';
 		alertUsername.style.webkitTextStroke = '';
 		alertBox.style.animationDuration = '';
+		if (customStyleEl) {
+			customStyleEl.remove();
+			customStyleEl = null;
+		}
+		alertBgVideo.pause();
+		alertBgVideo.src = '';
+		alertBgVideo.style.display = 'none';
 		isShowing = false;
 
 		// Signal to extension that we're done
