@@ -72,6 +72,11 @@
         "name": "alert-backgrounds",
         "title": "Alert-Hintergrundbilder",
         "allowedTypes": ["jpg", "jpeg", "png", "gif", "webp"]
+      },
+      {
+        "name": "alert-icons",
+        "title": "Alert-Icons",
+        "allowedTypes": ["png", "svg", "gif", "webp", "jpg", "jpeg"]
       }
     ]
   },

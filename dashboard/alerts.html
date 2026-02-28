@@ -3,6 +3,35 @@
 	<head>
 		<meta charset="UTF-8" />
 		<link rel="stylesheet" href="shared.css" />
+		<style>
+			.history-list {
+				list-style: none;
+				max-height: 300px;
+				overflow-y: auto;
+			}
+			.history-item {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 4px 8px;
+				border-bottom: 1px solid #2a2a4a;
+				font-size: 12px;
+			}
+			.history-item:last-child {
+				border-bottom: none;
+			}
+			.history-time {
+				color: #7f8c8d;
+				font-size: 11px;
+				min-width: 50px;
+			}
+			.priority-badge {
+				font-size: 10px;
+				color: #b9a3e3;
+				margin-left: auto;
+				flex-shrink: 0;
+			}
+		</style>
 	</head>
 	<body>
 		<h2>Alert Queue</h2>
@@ -42,6 +71,17 @@
 				<button class="btn-test btn-small" data-type="bits" style="background:#ff8c00;color:#fff;">Bits</button>
 				<button class="btn-test btn-small" data-type="raid" style="background:#e91916;color:#fff;">Raid</button>
 				<button class="btn-test btn-small" data-type="channelpoints" style="background:#00c896;color:#fff;">Channel Points</button>
+			</div>
+		</div>
+
+		<!-- Alert History -->
+		<div class="card">
+			<h3>Alert-Verlauf</h3>
+			<ul id="history-list" class="history-list">
+				<li class="empty-state">Noch keine Alerts</li>
+			</ul>
+			<div class="btn-group" style="margin-top: 8px;">
+				<button id="btn-clear-history" class="btn-secondary btn-small">Verlauf leeren</button>
 			</div>
 		</div>
 

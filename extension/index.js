@@ -12,6 +12,18 @@ const TWITCH_SCOPES = [
 	'channel:read:redemptions',
 ];
 
+const ALERT_HISTORY_LIMIT = 50;
+
+const DEFAULT_PRIORITIES = {
+	follow: 3,
+	sub: 6,
+	resub: 6,
+	subgift: 7,
+	bits: 5,
+	raid: 8,
+	channelpoints: 2,
+};
+
 module.exports = function (nodecg) {
 	// --- Replicants ---
 	const settings = nodecg.Replicant('settings');
@@ -19,9 +31,29 @@ module.exports = function (nodecg) {
 	const alertQueue = nodecg.Replicant('alertQueue');
 	const currentAlert = nodecg.Replicant('currentAlert');
 	const alertConfig = nodecg.Replicant('alertConfig');
+	const alertHistory = nodecg.Replicant('alertHistory');
 
 	let listener = null;
 	let apiClient = null;
+
+	// --- Alert History ---
+	function recordToHistory(alert) {
+		if (!alertHistory.value) {
+			alertHistory.value = [];
+		}
+		alertHistory.value.unshift({
+			id: alert.id,
+			type: alert.type,
+			username: alert.username,
+			message: alert.message || '',
+			amount: alert.amount || 0,
+			tier: alert.tier || '',
+			timestamp: alert.timestamp,
+		});
+		if (alertHistory.value.length > ALERT_HISTORY_LIMIT) {
+			alertHistory.value.length = ALERT_HISTORY_LIMIT;
+		}
+	}
 
 	// --- OAuth Route ---
 	const router = nodecg.Router();
@@ -253,6 +285,11 @@ module.exports = function (nodecg) {
 			return;
 		}
 
+		// Determine priority from config or defaults
+		const priority = (config && config.priority !== undefined)
+			? config.priority
+			: (DEFAULT_PRIORITIES[data.type] || 5);
+
 		const alert = {
 			id: crypto.randomUUID(),
 			type: data.type,
@@ -261,10 +298,21 @@ module.exports = function (nodecg) {
 			amount: data.amount || 0,
 			tier: data.tier || '',
 			timestamp: Date.now(),
+			priority,
 		};
 
-		alertQueue.value.push(alert);
-		nodecg.log.info(`Alert hinzugefügt: ${alert.type} von ${alert.username}`);
+		// Insert at correct position based on priority (higher priority = earlier in queue)
+		const queue = alertQueue.value;
+		let insertIndex = queue.length;
+		for (let i = 0; i < queue.length; i++) {
+			if (priority > (queue[i].priority || 5)) {
+				insertIndex = i;
+				break;
+			}
+		}
+		queue.splice(insertIndex, 0, alert);
+
+		nodecg.log.info(`Alert hinzugefügt: ${alert.type} von ${alert.username} (P${priority})`);
 
 		// If nothing is currently shown, show next
 		if (!currentAlert.value) {
@@ -280,13 +328,19 @@ module.exports = function (nodecg) {
 
 		const next = alertQueue.value.shift();
 		currentAlert.value = JSON.parse(JSON.stringify(next));
+
+		// Record to history
+		recordToHistory(next);
 	}
 
 	// When graphic signals it's done displaying (sets currentAlert to null), show next
 	currentAlert.on('change', (newVal, oldVal) => {
 		if (newVal === null && oldVal !== null) {
-			// Small delay before next alert
-			setTimeout(() => showNextAlert(), 500);
+			// Configurable delay before next alert
+			const delay = (settings.value && settings.value.alertDelay !== undefined)
+				? settings.value.alertDelay
+				: 500;
+			setTimeout(() => showNextAlert(), delay);
 		}
 	});
 
@@ -316,6 +370,11 @@ module.exports = function (nodecg) {
 
 	nodecg.listenFor('skipAlert', () => {
 		currentAlert.value = null;
+	});
+
+	nodecg.listenFor('clearHistory', () => {
+		alertHistory.value = [];
+		nodecg.log.info('Alert-Verlauf geleert.');
 	});
 
 	nodecg.listenFor('reconnect', async () => {

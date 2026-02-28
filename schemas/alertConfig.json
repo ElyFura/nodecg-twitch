@@ -53,6 +53,61 @@
         "backgroundImage": {
           "type": "string",
           "default": ""
+        },
+        "position": {
+          "type": "string",
+          "enum": ["top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"],
+          "default": "bottom-center"
+        },
+        "iconUrl": {
+          "type": "string",
+          "default": ""
+        },
+        "fontFamily": {
+          "type": "string",
+          "default": ""
+        },
+        "fontSize": {
+          "type": "number",
+          "default": 24
+        },
+        "textShadow": {
+          "type": "boolean",
+          "default": false
+        },
+        "textShadowColor": {
+          "type": "string",
+          "default": "#000000"
+        },
+        "textOutline": {
+          "type": "boolean",
+          "default": false
+        },
+        "textOutlineColor": {
+          "type": "string",
+          "default": "#000000"
+        },
+        "overlayOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.7
+        },
+        "animationInDuration": {
+          "type": "number",
+          "default": 500,
+          "description": "Entrance animation duration in milliseconds"
+        },
+        "animationOutDuration": {
+          "type": "number",
+          "default": 400,
+          "description": "Exit animation duration in milliseconds"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 5
         }
       }
     }
@@ -67,7 +122,19 @@
       "accentColor": "#b9a3e3",
       "animation": "slide",
       "soundEnabled": true,
-      "backgroundImage": ""
+      "backgroundImage": "",
+      "position": "bottom-center",
+      "iconUrl": "",
+      "fontFamily": "",
+      "fontSize": 24,
+      "textShadow": false,
+      "textShadowColor": "#000000",
+      "textOutline": false,
+      "textOutlineColor": "#000000",
+      "overlayOpacity": 0.7,
+      "animationInDuration": 500,
+      "animationOutDuration": 400,
+      "priority": 3
     },
     "sub": {
       "enabled": true,
@@ -78,7 +145,19 @@
       "accentColor": "#b9a3e3",
       "animation": "bounce",
       "soundEnabled": true,
-      "backgroundImage": ""
+      "backgroundImage": "",
+      "position": "bottom-center",
+      "iconUrl": "",
+      "fontFamily": "",
+      "fontSize": 24,
+      "textShadow": false,
+      "textShadowColor": "#000000",
+      "textOutline": false,
+      "textOutlineColor": "#000000",
+      "overlayOpacity": 0.7,
+      "animationInDuration": 500,
+      "animationOutDuration": 400,
+      "priority": 6
     },
     "resub": {
       "enabled": true,
@@ -89,7 +168,19 @@
       "accentColor": "#b9a3e3",
       "animation": "bounce",
       "soundEnabled": true,
-      "backgroundImage": ""
+      "backgroundImage": "",
+      "position": "bottom-center",
+      "iconUrl": "",
+      "fontFamily": "",
+      "fontSize": 24,
+      "textShadow": false,
+      "textShadowColor": "#000000",
+      "textOutline": false,
+      "textOutlineColor": "#000000",
+      "overlayOpacity": 0.7,
+      "animationInDuration": 500,
+      "animationOutDuration": 400,
+      "priority": 6
     },
     "subgift": {
       "enabled": true,
@@ -100,7 +191,19 @@
       "accentColor": "#b9a3e3",
       "animation": "bounce",
       "soundEnabled": true,
-      "backgroundImage": ""
+      "backgroundImage": "",
+      "position": "bottom-center",
+      "iconUrl": "",
+      "fontFamily": "",
+      "fontSize": 24,
+      "textShadow": false,
+      "textShadowColor": "#000000",
+      "textOutline": false,
+      "textOutlineColor": "#000000",
+      "overlayOpacity": 0.7,
+      "animationInDuration": 500,
+      "animationOutDuration": 400,
+      "priority": 7
     },
     "bits": {
       "enabled": true,
@@ -111,7 +214,19 @@
       "accentColor": "#ffd700",
       "animation": "bounce",
       "soundEnabled": true,
-      "backgroundImage": ""
+      "backgroundImage": "",
+      "position": "bottom-center",
+      "iconUrl": "",
+      "fontFamily": "",
+      "fontSize": 24,
+      "textShadow": false,
+      "textShadowColor": "#000000",
+      "textOutline": false,
+      "textOutlineColor": "#000000",
+      "overlayOpacity": 0.7,
+      "animationInDuration": 500,
+      "animationOutDuration": 400,
+      "priority": 5
     },
     "raid": {
       "enabled": true,
@@ -122,7 +237,19 @@
       "accentColor": "#ff6b6b",
       "animation": "slide",
       "soundEnabled": true,
-      "backgroundImage": ""
+      "backgroundImage": "",
+      "position": "bottom-center",
+      "iconUrl": "",
+      "fontFamily": "",
+      "fontSize": 24,
+      "textShadow": false,
+      "textShadowColor": "#000000",
+      "textOutline": false,
+      "textOutlineColor": "#000000",
+      "overlayOpacity": 0.7,
+      "animationInDuration": 500,
+      "animationOutDuration": 400,
+      "priority": 8
     },
     "channelpoints": {
       "enabled": true,
@@ -133,7 +260,19 @@
       "accentColor": "#7affc8",
       "animation": "fade",
       "soundEnabled": true,
-      "backgroundImage": ""
+      "backgroundImage": "",
+      "position": "bottom-center",
+      "iconUrl": "",
+      "fontFamily": "",
+      "fontSize": 24,
+      "textShadow": false,
+      "textShadowColor": "#000000",
+      "textOutline": false,
+      "textOutlineColor": "#000000",
+      "overlayOpacity": 0.7,
+      "animationInDuration": 500,
+      "animationOutDuration": 400,
+      "priority": 2
     }
   }
 }

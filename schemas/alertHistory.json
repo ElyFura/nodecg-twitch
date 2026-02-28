@@ -28,10 +28,6 @@
       },
       "timestamp": {
         "type": "number"
-      },
-      "priority": {
-        "type": "integer",
-        "default": 5
       }
     },
     "required": ["id", "type", "username", "timestamp"]

@@ -26,6 +26,13 @@
     "userId": {
       "type": "string",
       "default": ""
+    },
+    "alertDelay": {
+      "type": "number",
+      "default": 500,
+      "minimum": 0,
+      "maximum": 10000,
+      "description": "Delay between alerts in milliseconds"
     }
   },
   "required": ["clientId", "clientSecret", "channelName"]

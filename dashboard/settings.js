@@ -4,7 +4,9 @@ const connectionStatus = nodecg.Replicant('connectionStatus');
 const clientIdInput = document.getElementById('client-id');
 const clientSecretInput = document.getElementById('client-secret');
 const channelNameInput = document.getElementById('channel-name');
+const alertDelayInput = document.getElementById('alert-delay');
 const btnSave = document.getElementById('btn-save');
+const btnSaveDelay = document.getElementById('btn-save-delay');
 const btnConnect = document.getElementById('btn-connect');
 const btnReconnect = document.getElementById('btn-reconnect');
 const statusIndicator = document.getElementById('connection-status');
@@ -16,6 +18,7 @@ settings.on('change', (newVal) => {
 	clientIdInput.value = newVal.clientId || '';
 	clientSecretInput.value = newVal.clientSecret || '';
 	channelNameInput.value = newVal.channelName || '';
+	alertDelayInput.value = newVal.alertDelay !== undefined ? newVal.alertDelay : 500;
 });
 
 // Update connection status display
@@ -40,6 +43,14 @@ btnSave.addEventListener('click', () => {
 
 	btnSave.textContent = 'Gespeichert!';
 	setTimeout(() => { btnSave.textContent = 'Speichern'; }, 1500);
+});
+
+// Save alert delay
+btnSaveDelay.addEventListener('click', () => {
+	settings.value.alertDelay = parseInt(alertDelayInput.value) || 500;
+
+	btnSaveDelay.textContent = 'Gespeichert!';
+	setTimeout(() => { btnSaveDelay.textContent = 'Delay speichern'; }, 1500);
 });
 
 // Open OAuth popup
