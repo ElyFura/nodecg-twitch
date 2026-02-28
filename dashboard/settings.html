@@ -45,6 +45,18 @@
 			</div>
 		</div>
 
+		<!-- Redirect URI -->
+		<div class="card">
+			<h3>Redirect URI</h3>
+			<div class="form-group">
+				<label for="redirect-uri">Eigene Redirect URI (leer = automatisch)</label>
+				<input type="text" id="redirect-uri" placeholder="https://example.com/nodecg-twitch/auth/callback" />
+			</div>
+			<div class="btn-group">
+				<button id="btn-save-redirect" class="btn-primary btn-small">Redirect URI speichern</button>
+			</div>
+		</div>
+
 		<!-- OAuth Login -->
 		<div class="card">
 			<h3>Twitch Verbindung</h3>
@@ -55,6 +67,7 @@
 			<div class="btn-group">
 				<button id="btn-connect" class="btn-success">Mit Twitch verbinden</button>
 				<button id="btn-reconnect" class="btn-secondary">Neu verbinden</button>
+				<button id="btn-disconnect" class="btn-danger">Trennen</button>
 			</div>
 		</div>
 
@@ -68,7 +81,7 @@
 				channel:read:redemptions
 			</p>
 			<p style="font-size: 11px; color: #999; margin-top: 6px;">
-				Redirect URI: <code style="color:#b9a3e3;">{host}/nodecg-twitch/auth/callback</code>
+				Redirect URI: <code id="redirect-uri-display" style="color:#b9a3e3;">{host}/nodecg-twitch/auth/callback</code>
 			</p>
 		</div>
 

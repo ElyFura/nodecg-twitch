@@ -38,6 +38,11 @@
       "type": "boolean",
       "default": false,
       "description": "When true, alerts are paused but queue keeps filling"
+    },
+    "redirectUri": {
+      "type": "string",
+      "default": "",
+      "description": "Custom OAuth Redirect URI. If empty, auto-detected from request."
     }
   },
   "required": ["clientId", "clientSecret", "channelName"]

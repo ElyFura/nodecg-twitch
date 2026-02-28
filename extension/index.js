@@ -130,7 +130,7 @@ module.exports = function (nodecg) {
 			return res.status(400).send('Client ID nicht gesetzt. Bitte zuerst in den Einstellungen eintragen.');
 		}
 
-		const redirectUri = `${req.protocol}://${req.get('host')}/nodecg-twitch/auth/callback`;
+		const redirectUri = settings.value.redirectUri || `${req.protocol}://${req.get('host')}/nodecg-twitch/auth/callback`;
 		const params = new URLSearchParams({
 			client_id: clientId,
 			redirect_uri: redirectUri,
@@ -149,7 +149,7 @@ module.exports = function (nodecg) {
 		}
 
 		const { clientId, clientSecret } = settings.value;
-		const redirectUri = `${req.protocol}://${req.get('host')}/nodecg-twitch/auth/callback`;
+		const redirectUri = settings.value.redirectUri || `${req.protocol}://${req.get('host')}/nodecg-twitch/auth/callback`;
 
 		try {
 			const tokenResponse = await fetch('https://id.twitch.tv/oauth2/token', {
@@ -508,6 +508,20 @@ module.exports = function (nodecg) {
 
 	nodecg.listenFor('reconnect', async () => {
 		await tryConnect();
+	});
+
+	nodecg.listenFor('disconnect', () => {
+		if (listener) {
+			try {
+				listener.stop();
+			} catch { /* ignore */ }
+			listener = null;
+		}
+		connectionStatus.value = {
+			status: 'disconnected',
+			message: 'Manuell getrennt.',
+		};
+		nodecg.log.info('Twitch-Verbindung manuell getrennt.');
 	});
 
 	nodecg.listenFor('resetStats', () => {
