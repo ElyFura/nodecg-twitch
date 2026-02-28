@@ -56,6 +56,12 @@
         "width": 1920,
         "height": 1080,
         "singleInstance": true
+      },
+      {
+        "file": "goals.html",
+        "width": 1920,
+        "height": 1080,
+        "singleInstance": true
       }
     ],
     "soundCues": [

@@ -32,6 +32,8 @@ module.exports = function (nodecg) {
 	const currentAlert = nodecg.Replicant('currentAlert');
 	const alertConfig = nodecg.Replicant('alertConfig');
 	const alertHistory = nodecg.Replicant('alertHistory');
+	const alertStats = nodecg.Replicant('alertStats');
+	const goals = nodecg.Replicant('goals');
 
 	let listener = null;
 	let apiClient = null;
@@ -53,6 +55,70 @@ module.exports = function (nodecg) {
 		if (alertHistory.value.length > ALERT_HISTORY_LIMIT) {
 			alertHistory.value.length = ALERT_HISTORY_LIMIT;
 		}
+	}
+
+	// --- Alert Stats ---
+	function trackStats(alert) {
+		if (!alertStats.value) return;
+		if (alertStats.value.sessionStart === 0) {
+			alertStats.value.sessionStart = Date.now();
+		}
+		if (alertStats.value[alert.type] !== undefined) {
+			alertStats.value[alert.type]++;
+		}
+		alertStats.value.total++;
+		if (alert.type === 'bits' && alert.amount) {
+			alertStats.value.bitsTotal += alert.amount;
+		}
+	}
+
+	// --- Goal Progress ---
+	function updateGoals(alert) {
+		if (!goals.value) return;
+		const goalMap = {
+			follow: 'followGoal',
+			sub: 'subGoal',
+			resub: 'subGoal',
+			subgift: 'subGoal',
+			bits: 'bitsGoal',
+		};
+		const goalKey = goalMap[alert.type];
+		if (!goalKey || !goals.value[goalKey] || !goals.value[goalKey].enabled) return;
+		const goal = goals.value[goalKey];
+		if (alert.type === 'bits') {
+			goal.current += alert.amount || 0;
+		} else {
+			goal.current++;
+		}
+	}
+
+	// --- Alert Grouping ---
+	const groupBuffers = {};
+	const groupTimers = {};
+
+	function flushGroup(type) {
+		const buffer = groupBuffers[type];
+		if (!buffer || buffer.length === 0) return;
+
+		const config = alertConfig.value[type];
+		const usernames = buffer.map((d) => d.username);
+		const totalAmount = buffer.reduce((sum, d) => sum + (d.amount || 0), 0);
+		const count = buffer.length;
+
+		const grouped = {
+			type,
+			username: count <= 3 ? usernames.join(', ') : `${usernames[0]} +${count - 1} weitere`,
+			message: '',
+			amount: totalAmount,
+			tier: buffer[0].tier || '',
+			grouped: true,
+			groupCount: count,
+		};
+
+		groupBuffers[type] = [];
+		delete groupTimers[type];
+
+		enqueueAlert(grouped);
 	}
 
 	// --- OAuth Route ---
@@ -281,6 +347,42 @@ module.exports = function (nodecg) {
 	const lastAlertTime = {};
 
 	// --- Alert Queue Management ---
+	function enqueueAlert(data) {
+		const config = alertConfig.value[data.type];
+		const priority = (config && config.priority !== undefined)
+			? config.priority
+			: (DEFAULT_PRIORITIES[data.type] || 5);
+
+		const alert = {
+			id: crypto.randomUUID(),
+			type: data.type,
+			username: data.username,
+			message: data.message || '',
+			amount: data.amount || 0,
+			tier: data.tier || '',
+			timestamp: Date.now(),
+			priority,
+			grouped: data.grouped || false,
+			groupCount: data.groupCount || 0,
+		};
+
+		const queue = alertQueue.value;
+		let insertIndex = queue.length;
+		for (let i = 0; i < queue.length; i++) {
+			if (priority > (queue[i].priority || 5)) {
+				insertIndex = i;
+				break;
+			}
+		}
+		queue.splice(insertIndex, 0, alert);
+
+		nodecg.log.info(`Alert hinzugefügt: ${alert.type} von ${alert.username} (P${priority})${alert.grouped ? ` [Gruppe: ${alert.groupCount}]` : ''}`);
+
+		if (!currentAlert.value) {
+			showNextAlert();
+		}
+	}
+
 	function pushAlert(data) {
 		const config = alertConfig.value[data.type];
 		if (config && !config.enabled) {
@@ -307,7 +409,7 @@ module.exports = function (nodecg) {
 			const now = Date.now();
 			const last = lastAlertTime[data.type] || 0;
 			if (now - last < config.cooldown * 1000) {
-				nodecg.log.info(`Alert "${data.type}" im Cooldown (${Math.round((config.cooldown * 1000 - (now - last)) / 1000)}s übrig), übersprungen.`);
+				nodecg.log.info(`Alert "${data.type}" im Cooldown, übersprungen.`);
 				return;
 			}
 			lastAlertTime[data.type] = now;
@@ -315,39 +417,21 @@ module.exports = function (nodecg) {
 			lastAlertTime[data.type] = Date.now();
 		}
 
-		// Determine priority from config or defaults
-		const priority = (config && config.priority !== undefined)
-			? config.priority
-			: (DEFAULT_PRIORITIES[data.type] || 5);
+		// Track stats and goals
+		trackStats(data);
+		updateGoals(data);
 
-		const alert = {
-			id: crypto.randomUUID(),
-			type: data.type,
-			username: data.username,
-			message: data.message || '',
-			amount: data.amount || 0,
-			tier: data.tier || '',
-			timestamp: Date.now(),
-			priority,
-		};
-
-		// Insert at correct position based on priority (higher priority = earlier in queue)
-		const queue = alertQueue.value;
-		let insertIndex = queue.length;
-		for (let i = 0; i < queue.length; i++) {
-			if (priority > (queue[i].priority || 5)) {
-				insertIndex = i;
-				break;
+		// Check grouping
+		if (config && config.groupEnabled && config.groupWindow > 0) {
+			if (!groupBuffers[data.type]) groupBuffers[data.type] = [];
+			groupBuffers[data.type].push(data);
+			if (!groupTimers[data.type]) {
+				groupTimers[data.type] = setTimeout(() => flushGroup(data.type), config.groupWindow * 1000);
 			}
+			return;
 		}
-		queue.splice(insertIndex, 0, alert);
 
-		nodecg.log.info(`Alert hinzugefügt: ${alert.type} von ${alert.username} (P${priority})`);
-
-		// If nothing is currently shown, show next
-		if (!currentAlert.value) {
-			showNextAlert();
-		}
+		enqueueAlert(data);
 	}
 
 	function showNextAlert() {
@@ -424,6 +508,31 @@ module.exports = function (nodecg) {
 
 	nodecg.listenFor('reconnect', async () => {
 		await tryConnect();
+	});
+
+	nodecg.listenFor('resetStats', () => {
+		alertStats.value = {
+			sessionStart: Date.now(),
+			follow: 0, sub: 0, resub: 0, subgift: 0,
+			bits: 0, bitsTotal: 0, raid: 0, channelpoints: 0, total: 0,
+		};
+		nodecg.log.info('Alert-Statistiken zurückgesetzt.');
+	});
+
+	nodecg.listenFor('updateGoal', (data) => {
+		if (!goals.value || !data.goalKey || !goals.value[data.goalKey]) return;
+		const goal = goals.value[data.goalKey];
+		if (data.target !== undefined) goal.target = Number(data.target);
+		if (data.current !== undefined) goal.current = Number(data.current);
+		if (data.enabled !== undefined) goal.enabled = !!data.enabled;
+		if (data.label !== undefined) goal.label = data.label;
+		if (data.showInOverlay !== undefined) goal.showInOverlay = !!data.showInOverlay;
+		if (data.barColor !== undefined) goal.barColor = data.barColor;
+	});
+
+	nodecg.listenFor('resetGoal', (data) => {
+		if (!goals.value || !data.goalKey || !goals.value[data.goalKey]) return;
+		goals.value[data.goalKey].current = 0;
 	});
 
 	// --- Auto-connect on startup ---

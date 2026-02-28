@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="UTF-8" />
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			html, body {
+				width: 1920px;
+				height: 1080px;
+				overflow: hidden;
+				background: transparent;
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			}
+
+			#goal-bars {
+				position: absolute;
+				bottom: 20px;
+				left: 50%;
+				transform: translateX(-50%);
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				width: 400px;
+			}
+
+			.goal-card {
+				border-radius: 8px;
+				padding: 6px 12px;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+			}
+
+			.goal-header {
+				display: flex;
+				justify-content: space-between;
+				font-size: 14px;
+				margin-bottom: 4px;
+			}
+
+			.goal-label {
+				font-weight: 700;
+			}
+
+			.goal-track {
+				background: rgba(255, 255, 255, 0.1);
+				border-radius: 4px;
+				height: 8px;
+				overflow: hidden;
+			}
+
+			.goal-fill {
+				height: 100%;
+				border-radius: 4px;
+				transition: width 0.5s ease;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="goal-bars"></div>
+		<script type="module" src="./goals.js"></script>
+	</body>
+</html>

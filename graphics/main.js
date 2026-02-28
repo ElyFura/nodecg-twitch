@@ -1,6 +1,5 @@
 const currentAlert = nodecg.Replicant('currentAlert');
 const alertConfig = nodecg.Replicant('alertConfig');
-
 const alertContainer = document.getElementById('alert-container');
 const alertBox = document.getElementById('alert-box');
 const alertIcon = document.getElementById('alert-icon');
@@ -10,6 +9,8 @@ const alertMessage = document.getElementById('alert-message');
 const alertAccentBar = document.getElementById('alert-accent-bar');
 const alertBgOverlay = document.getElementById('alert-bg-overlay');
 const alertBgVideo = document.getElementById('alert-bg-video');
+const particleCanvas = document.getElementById('particle-canvas');
+const particleCtx = particleCanvas.getContext('2d');
 
 const TYPE_INFO = {
 	follow: { label: 'Neuer Follower', icon: '❤️' },
@@ -107,7 +108,8 @@ function showAlert(alert) {
 	if (!alert || isShowing) return;
 
 	isShowing = true;
-	const config = (alertConfig.value && alertConfig.value[alert.type]) || {};
+	const rawConfig = (alertConfig.value && alertConfig.value[alert.type]) || {};
+	const config = applyVariation(rawConfig);
 	const typeInfo = TYPE_INFO[alert.type] || { label: alert.type, icon: '🔔' };
 	const animation = config.animation || 'slide';
 	const duration = config.duration || 5000;
@@ -221,6 +223,11 @@ function showAlert(alert) {
 		}
 	}
 
+	// Spawn particles
+	if (config.particleEffect) {
+		spawnParticles(config.particleEffect);
+	}
+
 	// Inject custom CSS if defined
 	if (customStyleEl) {
 		customStyleEl.remove();
@@ -293,5 +300,104 @@ currentAlert.on('change', (newVal, oldVal) => {
 
 // Apply default position on load
 applyPosition('bottom-center');
+
+// --- Particle System ---
+particleCanvas.width = 1920;
+particleCanvas.height = 1080;
+let particles = [];
+let particleAnimId = null;
+
+const PARTICLE_SHAPES = {
+	confetti: (p, ctx) => {
+		ctx.save();
+		ctx.translate(p.x, p.y);
+		ctx.rotate(p.rotation);
+		ctx.fillStyle = p.color;
+		ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+		ctx.restore();
+	},
+	stars: (p, ctx) => {
+		ctx.save();
+		ctx.translate(p.x, p.y);
+		ctx.rotate(p.rotation);
+		ctx.fillStyle = p.color;
+		ctx.beginPath();
+		for (let i = 0; i < 5; i++) {
+			const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+			const method = i === 0 ? 'moveTo' : 'lineTo';
+			ctx[method](Math.cos(angle) * p.size, Math.sin(angle) * p.size);
+		}
+		ctx.closePath();
+		ctx.fill();
+		ctx.restore();
+	},
+	hearts: (p, ctx) => {
+		ctx.save();
+		ctx.translate(p.x, p.y);
+		ctx.rotate(p.rotation);
+		ctx.fillStyle = p.color;
+		ctx.beginPath();
+		const s = p.size * 0.6;
+		ctx.moveTo(0, s * 0.3);
+		ctx.bezierCurveTo(-s, -s * 0.5, -s * 0.5, -s * 1.2, 0, -s * 0.5);
+		ctx.bezierCurveTo(s * 0.5, -s * 1.2, s, -s * 0.5, 0, s * 0.3);
+		ctx.fill();
+		ctx.restore();
+	},
+};
+
+const CONFETTI_COLORS = ['#ff0', '#f0f', '#0ff', '#f00', '#0f0', '#00f', '#ff8c00', '#6441a5'];
+const STAR_COLORS = ['#ffd700', '#fff8dc', '#fffacd', '#f0e68c', '#ffec8b'];
+const HEART_COLORS = ['#ff1493', '#ff69b4', '#ff6b81', '#ff4757', '#e84393'];
+
+function spawnParticles(effect) {
+	if (!effect || !PARTICLE_SHAPES[effect]) return;
+	const colors = effect === 'confetti' ? CONFETTI_COLORS : effect === 'stars' ? STAR_COLORS : HEART_COLORS;
+	for (let i = 0; i < 60; i++) {
+		particles.push({
+			x: Math.random() * 1920,
+			y: -20 - Math.random() * 200,
+			vx: (Math.random() - 0.5) * 4,
+			vy: Math.random() * 3 + 2,
+			size: Math.random() * 10 + 6,
+			rotation: Math.random() * Math.PI * 2,
+			rotSpeed: (Math.random() - 0.5) * 0.1,
+			color: colors[Math.floor(Math.random() * colors.length)],
+			life: 1,
+			decay: 0.003 + Math.random() * 0.004,
+			shape: effect,
+		});
+	}
+	if (!particleAnimId) animateParticles();
+}
+
+function animateParticles() {
+	particleCtx.clearRect(0, 0, 1920, 1080);
+	particles = particles.filter((p) => p.life > 0);
+	if (particles.length === 0) {
+		particleAnimId = null;
+		return;
+	}
+	for (const p of particles) {
+		p.x += p.vx;
+		p.y += p.vy;
+		p.vy += 0.05;
+		p.rotation += p.rotSpeed;
+		p.life -= p.decay;
+		particleCtx.globalAlpha = Math.max(0, p.life);
+		PARTICLE_SHAPES[p.shape](p, particleCtx);
+	}
+	particleCtx.globalAlpha = 1;
+	particleAnimId = requestAnimationFrame(animateParticles);
+}
+
+// --- Variation Support ---
+function applyVariation(config) {
+	if (!config.variationEnabled || !config.variations || config.variations.length === 0) {
+		return config;
+	}
+	const variation = config.variations[Math.floor(Math.random() * config.variations.length)];
+	return { ...config, ...variation };
+}
 
 nodecg.log.info('Twitch Alert Overlay geladen.');

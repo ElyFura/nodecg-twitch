@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sessionStart": {
+      "type": "number",
+      "default": 0
+    },
+    "follow": {
+      "type": "integer",
+      "default": 0
+    },
+    "sub": {
+      "type": "integer",
+      "default": 0
+    },
+    "resub": {
+      "type": "integer",
+      "default": 0
+    },
+    "subgift": {
+      "type": "integer",
+      "default": 0
+    },
+    "bits": {
+      "type": "integer",
+      "default": 0
+    },
+    "bitsTotal": {
+      "type": "integer",
+      "default": 0,
+      "description": "Total bits received this session"
+    },
+    "raid": {
+      "type": "integer",
+      "default": 0
+    },
+    "channelpoints": {
+      "type": "integer",
+      "default": 0
+    },
+    "total": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "default": {
+    "sessionStart": 0,
+    "follow": 0,
+    "sub": 0,
+    "resub": 0,
+    "subgift": 0,
+    "bits": 0,
+    "bitsTotal": 0,
+    "raid": 0,
+    "channelpoints": 0,
+    "total": 0
+  }
+}

@@ -108,6 +108,31 @@
 			</div>
 		</div>
 
+		<!-- Alert Statistics -->
+		<div class="card">
+			<h3>Statistiken</h3>
+			<div id="stats-display" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:11px;text-align:center;">
+				<div><span class="alert-type-badge badge-follow">Follow</span><div id="stat-follow">0</div></div>
+				<div><span class="alert-type-badge badge-sub">Sub</span><div id="stat-sub">0</div></div>
+				<div><span class="alert-type-badge badge-resub">Resub</span><div id="stat-resub">0</div></div>
+				<div><span class="alert-type-badge badge-subgift">Gift</span><div id="stat-subgift">0</div></div>
+				<div><span class="alert-type-badge badge-bits">Bits</span><div id="stat-bits">0</div></div>
+				<div><span class="alert-type-badge badge-raid">Raid</span><div id="stat-raid">0</div></div>
+				<div><span class="alert-type-badge badge-channelpoints">CP</span><div id="stat-channelpoints">0</div></div>
+				<div><strong style="color:#b9a3e3;">Gesamt</strong><div id="stat-total" style="font-weight:700;color:#b9a3e3;">0</div></div>
+			</div>
+			<div style="font-size:10px;color:#7f8c8d;margin-top:4px;">Bits gesamt: <span id="stat-bits-total">0</span> | Session: <span id="stat-session">-</span></div>
+			<div class="btn-group" style="margin-top:6px;">
+				<button id="btn-reset-stats" class="btn-secondary btn-small">Statistiken zurücksetzen</button>
+			</div>
+		</div>
+
+		<!-- Goals -->
+		<div class="card">
+			<h3>Goals</h3>
+			<div id="goals-container"></div>
+		</div>
+
 		<!-- Alert History -->
 		<div class="card">
 			<h3>Alert-Verlauf</h3>

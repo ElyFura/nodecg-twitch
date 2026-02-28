@@ -3,6 +3,8 @@ const currentAlert = nodecg.Replicant('currentAlert');
 const connectionStatus = nodecg.Replicant('connectionStatus');
 const alertHistory = nodecg.Replicant('alertHistory');
 const settings = nodecg.Replicant('settings');
+const alertStats = nodecg.Replicant('alertStats');
+const goals = nodecg.Replicant('goals');
 
 const queueList = document.getElementById('queue-list');
 const queueCount = document.getElementById('queue-count');
@@ -152,4 +154,113 @@ settings.on('change', (newVal) => {
 
 togglePause.addEventListener('change', () => {
 	nodecg.sendMessage('togglePause', { paused: togglePause.checked });
+});
+
+// --- Stats ---
+const STAT_TYPES = ['follow', 'sub', 'resub', 'subgift', 'bits', 'raid', 'channelpoints'];
+
+alertStats.on('change', (newVal) => {
+	if (!newVal) return;
+	STAT_TYPES.forEach((type) => {
+		const el = document.getElementById(`stat-${type}`);
+		if (el) el.textContent = newVal[type] || 0;
+	});
+	const totalEl = document.getElementById('stat-total');
+	if (totalEl) totalEl.textContent = newVal.total || 0;
+	const bitsTotalEl = document.getElementById('stat-bits-total');
+	if (bitsTotalEl) bitsTotalEl.textContent = (newVal.bitsTotal || 0).toLocaleString('de-DE');
+	const sessionEl = document.getElementById('stat-session');
+	if (sessionEl && newVal.sessionStart > 0) {
+		sessionEl.textContent = new Date(newVal.sessionStart).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+	}
+});
+
+document.getElementById('btn-reset-stats').addEventListener('click', () => {
+	if (confirm('Statistiken zurücksetzen?')) {
+		nodecg.sendMessage('resetStats');
+	}
+});
+
+// --- Goals ---
+const GOAL_DEFS = [
+	{ key: 'followGoal', label: 'Follow-Goal', icon: '❤️' },
+	{ key: 'subGoal', label: 'Sub-Goal', icon: '⭐' },
+	{ key: 'bitsGoal', label: 'Bits-Goal', icon: '💎' },
+];
+const goalsContainer = document.getElementById('goals-container');
+
+function renderGoals(goalsVal) {
+	if (!goalsVal) {
+		goalsContainer.innerHTML = '<div class="empty-state">Keine Goals konfiguriert</div>';
+		return;
+	}
+	goalsContainer.innerHTML = GOAL_DEFS.map(({ key, label, icon }) => {
+		const g = goalsVal[key];
+		if (!g) return '';
+		const pct = g.target > 0 ? Math.min(100, Math.round((g.current / g.target) * 100)) : 0;
+		const barColor = g.barColor || '#6441a5';
+		return `
+			<div style="margin-bottom:8px;" data-goal="${key}">
+				<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+					<label class="toggle" style="margin-bottom:0;">
+						<input type="checkbox" class="goal-enabled" data-goal="${key}" ${g.enabled ? 'checked' : ''} autocomplete="off" />
+						<span class="toggle-slider"></span>
+					</label>
+					<span>${icon}</span>
+					<strong style="font-size:12px;">${g.label || label}</strong>
+					<span style="font-size:11px;color:#7f8c8d;margin-left:auto;">${g.current} / ${g.target} (${pct}%)</span>
+				</div>
+				<div style="background:#1a1a2e;border-radius:4px;height:12px;overflow:hidden;">
+					<div style="background:${barColor};height:100%;width:${pct}%;transition:width 0.3s;border-radius:4px;"></div>
+				</div>
+				<div style="display:flex;gap:4px;margin-top:4px;">
+					<input type="text" class="goal-label" data-goal="${key}" value="${g.label || ''}" placeholder="Label" style="width:80px;font-size:11px;padding:2px 4px;" />
+					<input type="number" class="goal-target" data-goal="${key}" value="${g.target}" min="1" style="width:60px;font-size:11px;padding:2px 4px;" />
+					<input type="color" class="goal-color" data-goal="${key}" value="${barColor}" style="width:30px;height:22px;padding:1px;" />
+					<label class="toggle" style="margin-bottom:0;" title="Im Overlay anzeigen">
+						<input type="checkbox" class="goal-overlay" data-goal="${key}" ${g.showInOverlay ? 'checked' : ''} autocomplete="off" />
+						<span class="toggle-slider"></span>
+					</label>
+					<span style="font-size:10px;color:#7f8c8d;align-self:center;">Overlay</span>
+					<button class="btn-secondary btn-small goal-reset" data-goal="${key}" style="margin-left:auto;font-size:10px;padding:2px 6px;">Reset</button>
+				</div>
+			</div>
+		`;
+	}).join('');
+
+	// Attach goal event listeners
+	goalsContainer.querySelectorAll('.goal-enabled').forEach((cb) => {
+		cb.addEventListener('change', () => {
+			nodecg.sendMessage('updateGoal', { goalKey: cb.dataset.goal, enabled: cb.checked });
+		});
+	});
+	goalsContainer.querySelectorAll('.goal-target').forEach((input) => {
+		input.addEventListener('change', () => {
+			nodecg.sendMessage('updateGoal', { goalKey: input.dataset.goal, target: input.value });
+		});
+	});
+	goalsContainer.querySelectorAll('.goal-label').forEach((input) => {
+		input.addEventListener('change', () => {
+			nodecg.sendMessage('updateGoal', { goalKey: input.dataset.goal, label: input.value });
+		});
+	});
+	goalsContainer.querySelectorAll('.goal-color').forEach((input) => {
+		input.addEventListener('change', () => {
+			nodecg.sendMessage('updateGoal', { goalKey: input.dataset.goal, barColor: input.value });
+		});
+	});
+	goalsContainer.querySelectorAll('.goal-overlay').forEach((cb) => {
+		cb.addEventListener('change', () => {
+			nodecg.sendMessage('updateGoal', { goalKey: cb.dataset.goal, showInOverlay: cb.checked });
+		});
+	});
+	goalsContainer.querySelectorAll('.goal-reset').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			nodecg.sendMessage('resetGoal', { goalKey: btn.dataset.goal });
+		});
+	});
+}
+
+goals.on('change', (newVal) => {
+	renderGoals(newVal);
 });

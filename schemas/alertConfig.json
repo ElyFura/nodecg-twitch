@@ -155,6 +155,43 @@
           "minimum": 0,
           "maximum": 1,
           "description": "TTS volume"
+        },
+        "groupEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Group rapid same-type events into one alert"
+        },
+        "groupWindow": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Grouping window in seconds"
+        },
+        "variationEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable random visual variations"
+        },
+        "variations": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "backgroundColor": { "type": "string" },
+              "textColor": { "type": "string" },
+              "accentColor": { "type": "string" },
+              "animation": { "type": "string" }
+            }
+          },
+          "description": "Array of visual variation overrides"
+        },
+        "particleEffect": {
+          "type": "string",
+          "enum": ["", "confetti", "stars", "hearts"],
+          "default": "",
+          "description": "Particle effect shown with this alert type"
         }
       }
     }
@@ -189,7 +226,12 @@
       "backgroundVideo": "",
       "ttsEnabled": false,
       "ttsRate": 1,
-      "ttsVolume": 1
+      "ttsVolume": 1,
+      "groupEnabled": false,
+      "groupWindow": 5,
+      "variationEnabled": false,
+      "variations": [],
+      "particleEffect": ""
     },
     "sub": {
       "enabled": true,
@@ -220,7 +262,12 @@
       "backgroundVideo": "",
       "ttsEnabled": false,
       "ttsRate": 1,
-      "ttsVolume": 1
+      "ttsVolume": 1,
+      "groupEnabled": false,
+      "groupWindow": 5,
+      "variationEnabled": false,
+      "variations": [],
+      "particleEffect": ""
     },
     "resub": {
       "enabled": true,
@@ -251,7 +298,12 @@
       "backgroundVideo": "",
       "ttsEnabled": false,
       "ttsRate": 1,
-      "ttsVolume": 1
+      "ttsVolume": 1,
+      "groupEnabled": false,
+      "groupWindow": 5,
+      "variationEnabled": false,
+      "variations": [],
+      "particleEffect": ""
     },
     "subgift": {
       "enabled": true,
@@ -282,7 +334,12 @@
       "backgroundVideo": "",
       "ttsEnabled": false,
       "ttsRate": 1,
-      "ttsVolume": 1
+      "ttsVolume": 1,
+      "groupEnabled": false,
+      "groupWindow": 5,
+      "variationEnabled": false,
+      "variations": [],
+      "particleEffect": ""
     },
     "bits": {
       "enabled": true,
@@ -313,7 +370,12 @@
       "backgroundVideo": "",
       "ttsEnabled": false,
       "ttsRate": 1,
-      "ttsVolume": 1
+      "ttsVolume": 1,
+      "groupEnabled": false,
+      "groupWindow": 5,
+      "variationEnabled": false,
+      "variations": [],
+      "particleEffect": ""
     },
     "raid": {
       "enabled": true,
@@ -344,7 +406,12 @@
       "backgroundVideo": "",
       "ttsEnabled": false,
       "ttsRate": 1,
-      "ttsVolume": 1
+      "ttsVolume": 1,
+      "groupEnabled": false,
+      "groupWindow": 5,
+      "variationEnabled": false,
+      "variations": [],
+      "particleEffect": ""
     },
     "channelpoints": {
       "enabled": true,
@@ -375,7 +442,12 @@
       "backgroundVideo": "",
       "ttsEnabled": false,
       "ttsRate": 1,
-      "ttsVolume": 1
+      "ttsVolume": 1,
+      "groupEnabled": false,
+      "groupWindow": 5,
+      "variationEnabled": false,
+      "variations": [],
+      "particleEffect": ""
     }
   }
 }

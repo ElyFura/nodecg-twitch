@@ -272,6 +272,41 @@ function buildEditorUI() {
 				</div>
 			</div>
 
+			<div class="config-row">
+				<label>Gruppierung</label>
+				<div class="toggle-group">
+					<label class="toggle" style="margin-bottom:0;">
+						<input type="checkbox" data-field="groupEnabled" autocomplete="off" />
+						<span class="toggle-slider"></span>
+					</label>
+					<span class="hint-text">Fenster:</span>
+					<input type="number" data-field="groupWindow" min="1" max="30" step="1" value="5" style="max-width:60px;" />
+					<span class="hint-text">Sek.</span>
+				</div>
+			</div>
+
+			<div class="config-row">
+				<label>Variationen</label>
+				<div class="toggle-group">
+					<label class="toggle" style="margin-bottom:0;">
+						<input type="checkbox" data-field="variationEnabled" autocomplete="off" />
+						<span class="toggle-slider"></span>
+					</label>
+					<button class="btn-add-variation btn-secondary btn-small" data-type="${key}">+ Variation</button>
+				</div>
+			</div>
+			<div class="variations-list" data-type="${key}"></div>
+
+			<div class="config-row">
+				<label>Partikel</label>
+				<select data-field="particleEffect">
+					<option value="">Keine</option>
+					<option value="confetti">Konfetti</option>
+					<option value="stars">Sterne</option>
+					<option value="hearts">Herzen</option>
+				</select>
+			</div>
+
 			<div class="preview-container">
 				<div class="preview-label">Vorschau</div>
 				<div class="preview-box" data-preview="${key}">
@@ -325,8 +360,64 @@ function buildEditorUI() {
 		});
 	});
 
+	// Add variation buttons
+	container.querySelectorAll('.btn-add-variation').forEach((btn) => {
+		btn.addEventListener('click', () => addVariation(btn.dataset.type));
+	});
+
 	// Initial preview update
 	ALERT_TYPES.forEach(({ key }) => updatePreview(key));
+}
+
+// --- Variation Management ---
+const variationData = {};
+ALERT_TYPES.forEach(({ key }) => { variationData[key] = []; });
+
+function renderVariations(key) {
+	const listEl = container.querySelector(`.variations-list[data-type="${key}"]`);
+	if (!listEl) return;
+	const vars = variationData[key] || [];
+	if (vars.length === 0) { listEl.innerHTML = ''; return; }
+	listEl.innerHTML = vars.map((v, i) => `
+		<div style="display:flex;gap:4px;align-items:center;margin-bottom:4px;padding:4px;background:#0d1117;border-radius:4px;">
+			<span style="font-size:10px;color:#7f8c8d;min-width:16px;">#${i + 1}</span>
+			<input type="color" value="${v.backgroundColor || '#6441a5'}" data-var-field="backgroundColor" data-var-idx="${i}" data-var-type="${key}" style="width:30px;height:22px;" />
+			<input type="color" value="${v.textColor || '#ffffff'}" data-var-field="textColor" data-var-idx="${i}" data-var-type="${key}" style="width:30px;height:22px;" />
+			<input type="color" value="${v.accentColor || '#b9a3e3'}" data-var-field="accentColor" data-var-idx="${i}" data-var-type="${key}" style="width:30px;height:22px;" />
+			<select data-var-field="animation" data-var-idx="${i}" data-var-type="${key}" style="width:70px;font-size:11px;">
+				<option value="slide" ${v.animation === 'slide' ? 'selected' : ''}>Slide</option>
+				<option value="fade" ${v.animation === 'fade' ? 'selected' : ''}>Fade</option>
+				<option value="bounce" ${v.animation === 'bounce' ? 'selected' : ''}>Bounce</option>
+			</select>
+			<button class="btn-danger btn-small btn-remove-var" data-var-idx="${i}" data-var-type="${key}" style="font-size:10px;padding:2px 6px;">X</button>
+		</div>
+	`).join('');
+
+	listEl.querySelectorAll('[data-var-field]').forEach((input) => {
+		input.addEventListener('change', () => {
+			const idx = parseInt(input.dataset.varIdx);
+			const field = input.dataset.varField;
+			if (variationData[key][idx]) variationData[key][idx][field] = input.value;
+		});
+	});
+	listEl.querySelectorAll('.btn-remove-var').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			variationData[key].splice(parseInt(btn.dataset.varIdx), 1);
+			renderVariations(key);
+		});
+	});
+}
+
+function addVariation(key) {
+	if (!variationData[key]) variationData[key] = [];
+	const section = container.querySelector(`[data-type="${key}"]`);
+	variationData[key].push({
+		backgroundColor: section ? section.querySelector('[data-field="backgroundColor"]').value : '#6441a5',
+		textColor: section ? section.querySelector('[data-field="textColor"]').value : '#ffffff',
+		accentColor: section ? section.querySelector('[data-field="accentColor"]').value : '#b9a3e3',
+		animation: section ? section.querySelector('[data-field="animation"]').value : 'slide',
+	});
+	renderVariations(key);
 }
 
 function updatePreview(key) {
@@ -547,6 +638,24 @@ function loadConfig(config) {
 		const ttsVolumeInput = section.querySelector('[data-field="ttsVolume"]');
 		if (ttsVolumeInput) ttsVolumeInput.value = typeConfig.ttsVolume !== undefined ? typeConfig.ttsVolume : 1;
 
+		// Grouping
+		const groupEnabledInput = section.querySelector('[data-field="groupEnabled"]');
+		if (groupEnabledInput) groupEnabledInput.checked = !!typeConfig.groupEnabled;
+
+		const groupWindowInput = section.querySelector('[data-field="groupWindow"]');
+		if (groupWindowInput) groupWindowInput.value = typeConfig.groupWindow || 5;
+
+		// Variations
+		const variationEnabledInput = section.querySelector('[data-field="variationEnabled"]');
+		if (variationEnabledInput) variationEnabledInput.checked = !!typeConfig.variationEnabled;
+
+		variationData[key] = Array.isArray(typeConfig.variations) ? JSON.parse(JSON.stringify(typeConfig.variations)) : [];
+		renderVariations(key);
+
+		// Particles
+		const particleInput = section.querySelector('[data-field="particleEffect"]');
+		if (particleInput) particleInput.value = typeConfig.particleEffect || '';
+
 		updatePreview(key);
 	});
 }
@@ -588,6 +697,11 @@ function saveConfig() {
 			ttsEnabled: section.querySelector('[data-field="ttsEnabled"]').checked,
 			ttsRate: parseFloat(section.querySelector('[data-field="ttsRate"]').value) || 1,
 			ttsVolume: parseFloat(section.querySelector('[data-field="ttsVolume"]').value),
+			groupEnabled: section.querySelector('[data-field="groupEnabled"]').checked,
+			groupWindow: parseInt(section.querySelector('[data-field="groupWindow"]').value) || 5,
+			variationEnabled: section.querySelector('[data-field="variationEnabled"]').checked,
+			variations: variationData[key] || [],
+			particleEffect: section.querySelector('[data-field="particleEffect"]').value || '',
 		};
 	});
 
@@ -761,6 +875,7 @@ const THEME_BASE = {
 	textOutlineColor: '#000000', overlayOpacity: 0.7, animationInDuration: 500,
 	animationOutDuration: 400, customCss: '', minAmount: 0, minTier: '', cooldown: 0,
 	ttsEnabled: false, ttsRate: 1, ttsVolume: 1,
+	groupEnabled: false, groupWindow: 5, variationEnabled: false, variations: [], particleEffect: '',
 };
 
 const THEMES = {
