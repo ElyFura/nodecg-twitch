@@ -1,0 +1,92 @@
+{
+  "name": "nodecg-twitch",
+  "version": "0.1.0",
+  "description": "Twitch Alert Overlay Bundle for NodeCG",
+  "homepage": "",
+  "author": {
+    "name": "ElyFura",
+    "email": "info@elyfura.de",
+    "url": "https://elyfura.de"
+  },
+  "files": [
+    "dashboard",
+    "graphics",
+    "extension",
+    "schemas"
+  ],
+  "keywords": [
+    "twitch",
+    "alerts",
+    "nodecg-bundle"
+  ],
+  "dependencies": {
+    "@twurple/auth": "^7.2.0",
+    "@twurple/api": "^7.2.0",
+    "@twurple/eventsub-ws": "^7.2.0"
+  },
+  "nodecg": {
+    "compatibleRange": "^2.0.0",
+    "dashboardPanels": [
+      {
+        "name": "alerts",
+        "title": "Alerts",
+        "width": 3,
+        "file": "alerts.html",
+        "headerColor": "#6441a5"
+      },
+      {
+        "name": "overlay-editor",
+        "title": "Overlay Editor",
+        "width": 6,
+        "file": "overlay-editor.html",
+        "headerColor": "#525F78"
+      },
+      {
+        "name": "settings",
+        "title": "Einstellungen",
+        "width": 3,
+        "file": "settings.html",
+        "headerColor": "#333333",
+        "workspace": "Setup"
+      }
+    ],
+    "graphics": [
+      {
+        "file": "main.html",
+        "width": 1920,
+        "height": 1080,
+        "singleInstance": true
+      }
+    ],
+    "soundCues": [
+      { "name": "follow", "assignable": true, "defaultVolume": 60 },
+      { "name": "sub", "assignable": true, "defaultVolume": 70 },
+      { "name": "resub", "assignable": true, "defaultVolume": 70 },
+      { "name": "subgift", "assignable": true, "defaultVolume": 70 },
+      { "name": "bits", "assignable": true, "defaultVolume": 65 },
+      { "name": "raid", "assignable": true, "defaultVolume": 75 },
+      { "name": "channelpoints", "assignable": true, "defaultVolume": 60 }
+    ],
+    "assetCategories": [
+      {
+        "name": "alert-backgrounds",
+        "title": "Alert-Hintergrundbilder",
+        "allowedTypes": ["jpg", "jpeg", "png", "gif", "webp"]
+      }
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "repository": "https://github.com/nodecg/nodecg.git",
+  "license": "Apache-2.0"
+}

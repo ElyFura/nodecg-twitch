@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "follow": { "$ref": "#/$defs/alertTypeConfig" },
+    "sub": { "$ref": "#/$defs/alertTypeConfig" },
+    "resub": { "$ref": "#/$defs/alertTypeConfig" },
+    "subgift": { "$ref": "#/$defs/alertTypeConfig" },
+    "bits": { "$ref": "#/$defs/alertTypeConfig" },
+    "raid": { "$ref": "#/$defs/alertTypeConfig" },
+    "channelpoints": { "$ref": "#/$defs/alertTypeConfig" }
+  },
+  "$defs": {
+    "alertTypeConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "duration": {
+          "type": "number",
+          "default": 5000,
+          "description": "Display duration in milliseconds"
+        },
+        "messageTemplate": {
+          "type": "string",
+          "default": "{username}"
+        },
+        "backgroundColor": {
+          "type": "string",
+          "default": "#6441a5"
+        },
+        "textColor": {
+          "type": "string",
+          "default": "#ffffff"
+        },
+        "accentColor": {
+          "type": "string",
+          "default": "#b9a3e3"
+        },
+        "animation": {
+          "type": "string",
+          "enum": ["slide", "fade", "bounce"],
+          "default": "slide"
+        },
+        "soundEnabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "backgroundImage": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    }
+  },
+  "default": {
+    "follow": {
+      "enabled": true,
+      "duration": 5000,
+      "messageTemplate": "{username} ist jetzt dabei!",
+      "backgroundColor": "#6441a5",
+      "textColor": "#ffffff",
+      "accentColor": "#b9a3e3",
+      "animation": "slide",
+      "soundEnabled": true,
+      "backgroundImage": ""
+    },
+    "sub": {
+      "enabled": true,
+      "duration": 6000,
+      "messageTemplate": "{username} hat abonniert!",
+      "backgroundColor": "#6441a5",
+      "textColor": "#ffffff",
+      "accentColor": "#b9a3e3",
+      "animation": "bounce",
+      "soundEnabled": true,
+      "backgroundImage": ""
+    },
+    "resub": {
+      "enabled": true,
+      "duration": 6000,
+      "messageTemplate": "{username} hat erneut abonniert! ({amount} Monate)",
+      "backgroundColor": "#6441a5",
+      "textColor": "#ffffff",
+      "accentColor": "#b9a3e3",
+      "animation": "bounce",
+      "soundEnabled": true,
+      "backgroundImage": ""
+    },
+    "subgift": {
+      "enabled": true,
+      "duration": 6000,
+      "messageTemplate": "{username} hat ein Sub verschenkt!",
+      "backgroundColor": "#6441a5",
+      "textColor": "#ffffff",
+      "accentColor": "#b9a3e3",
+      "animation": "bounce",
+      "soundEnabled": true,
+      "backgroundImage": ""
+    },
+    "bits": {
+      "enabled": true,
+      "duration": 6000,
+      "messageTemplate": "{username} cheert {amount} Bits!",
+      "backgroundColor": "#ff8c00",
+      "textColor": "#ffffff",
+      "accentColor": "#ffd700",
+      "animation": "bounce",
+      "soundEnabled": true,
+      "backgroundImage": ""
+    },
+    "raid": {
+      "enabled": true,
+      "duration": 8000,
+      "messageTemplate": "{username} raidet mit {amount} Viewern!",
+      "backgroundColor": "#e91916",
+      "textColor": "#ffffff",
+      "accentColor": "#ff6b6b",
+      "animation": "slide",
+      "soundEnabled": true,
+      "backgroundImage": ""
+    },
+    "channelpoints": {
+      "enabled": true,
+      "duration": 5000,
+      "messageTemplate": "{username} hat Channel Points eingelöst!",
+      "backgroundColor": "#00c896",
+      "textColor": "#ffffff",
+      "accentColor": "#7affc8",
+      "animation": "fade",
+      "soundEnabled": true,
+      "backgroundImage": ""
+    }
+  }
+}

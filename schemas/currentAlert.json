@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["follow", "sub", "resub", "subgift", "bits", "raid", "channelpoints"]
+        },
+        "username": { "type": "string" },
+        "message": { "type": "string" },
+        "amount": { "type": "number" },
+        "tier": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "type", "username", "timestamp"]
+    },
+    {
+      "type": "null"
+    }
+  ],
+  "default": null
+}
