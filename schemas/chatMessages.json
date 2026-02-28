@@ -21,9 +21,14 @@
 				"type": "string"
 			},
 			"badges": {
-				"type": "object",
-				"additionalProperties": {
-					"type": "string"
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"id": { "type": "string" },
+						"url": { "type": "string" }
+					},
+					"required": ["id", "url"]
 				}
 			},
 			"fragments": {

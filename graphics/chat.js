@@ -4,13 +4,6 @@ const chatMessages = nodecg.Replicant('chatMessages');
 const container = document.getElementById('chat-container');
 const messagesEl = document.getElementById('chat-messages');
 
-const BADGE_URLS = {
-	broadcaster: 'https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1',
-	moderator: 'https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b163-e62ace2336f2/1',
-	vip: 'https://static-cdn.jtvnw.net/badges/v1/b817aba4-fad8-49e2-b88a-7cc744571f37/1',
-	subscriber: 'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/1',
-};
-
 let lastRenderedCount = 0;
 const fadeTimers = new Map();
 let currentConfig = null;
@@ -79,18 +72,12 @@ function renderMessageHtml(msg, config) {
 		parts.push(`<span class="chat-timestamp">${time}</span>`);
 	}
 
-	// Badges
-	if (config.showBadges && msg.badges) {
-		const badgeHtml = [];
-		for (const [badgeType] of Object.entries(msg.badges)) {
-			const url = BADGE_URLS[badgeType];
-			if (url) {
-				badgeHtml.push(`<img class="chat-badge" src="${url}" alt="${escapeHtml(badgeType)}" />`);
-			}
-		}
-		if (badgeHtml.length > 0) {
-			parts.push(`<span class="chat-badges">${badgeHtml.join('')}</span>`);
-		}
+	// Badges (array of { id, url })
+	if (config.showBadges && Array.isArray(msg.badges) && msg.badges.length > 0) {
+		const badgeHtml = msg.badges.map((b) =>
+			`<img class="chat-badge" src="${escapeHtml(b.url)}" alt="${escapeHtml(b.id)}" />`
+		).join('');
+		parts.push(`<span class="chat-badges">${badgeHtml}</span>`);
 	}
 
 	// Username

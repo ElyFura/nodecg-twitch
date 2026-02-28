@@ -41,6 +41,25 @@ module.exports = function (nodecg) {
 
 	let listener = null;
 	let apiClient = null;
+	let badgeUrlMap = {}; // { "broadcaster/1": "https://...", ... }
+
+	async function fetchBadgeUrls(userId) {
+		if (!apiClient) return;
+		try {
+			const globalBadges = await apiClient.chat.getGlobalBadges();
+			const channelBadges = await apiClient.chat.getChannelBadges(userId);
+			const map = {};
+			for (const badge of [...globalBadges, ...channelBadges]) {
+				for (const version of badge.versions) {
+					map[`${badge.id}/${version.id}`] = version.getImageUrl(1);
+				}
+			}
+			badgeUrlMap = map;
+			nodecg.log.info(`${Object.keys(map).length} Badge-URLs geladen.`);
+		} catch (err) {
+			nodecg.log.error('Badge-URLs laden fehlgeschlagen:', err.message);
+		}
+	}
 
 	// --- Alert History ---
 	function recordToHistory(alert) {
@@ -383,13 +402,24 @@ module.exports = function (nodecg) {
 						}));
 					}
 
+					// Resolve badge IDs to image URLs
+					const badgeList = [];
+					if (badges && typeof badges === 'object') {
+						for (const [id, version] of Object.entries(badges)) {
+							const url = badgeUrlMap[`${id}/${version}`];
+							if (url) {
+								badgeList.push({ id, url });
+							}
+						}
+					}
+
 					pushChatMessage({
 						id: event.messageId,
 						username: event.chatterName,
 						displayName: event.chatterDisplayName,
 						color: event.color || null,
 						text: event.messageText,
-						badges,
+						badges: badgeList,
 						fragments,
 						timestamp: Date.now(),
 					});
@@ -404,6 +434,7 @@ module.exports = function (nodecg) {
 			});
 
 			listener.start();
+			await fetchBadgeUrls(userId);
 
 			connectionStatus.value = {
 				status: 'connected',
@@ -632,7 +663,7 @@ module.exports = function (nodecg) {
 			displayName: 'TestUser',
 			color: '#FF69B4',
 			text: 'Das ist eine Test-Nachricht! PogChamp',
-			badges: { broadcaster: '1' },
+			badges: badgeUrlMap['broadcaster/1'] ? [{ id: 'broadcaster', url: badgeUrlMap['broadcaster/1'] }] : [],
 			fragments: [
 				{ type: 'text', text: 'Das ist eine Test-Nachricht! ' },
 				{ type: 'emote', text: 'PogChamp', emoteId: '305954156' },
