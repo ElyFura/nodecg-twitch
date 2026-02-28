@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="UTF-8" />
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			html, body {
+				width: 1920px;
+				height: 1080px;
+				overflow: hidden;
+				background: transparent;
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			}
+
+			/* Alert container - bottom center by default */
+			#alert-container {
+				position: absolute;
+				bottom: 80px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 1000;
+				pointer-events: none;
+			}
+
+			#alert-box {
+				display: none;
+				position: relative;
+				min-width: 400px;
+				max-width: 700px;
+				border-radius: 12px;
+				overflow: hidden;
+				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+				background-size: cover;
+				background-position: center;
+				background-repeat: no-repeat;
+			}
+
+			.alert-bg-overlay {
+				display: none;
+				position: absolute;
+				top: 0; left: 0; right: 0; bottom: 0;
+				border-radius: 12px;
+				z-index: 0;
+			}
+
+			#alert-box.has-bg-image .alert-bg-overlay {
+				display: block;
+			}
+
+			#alert-box.visible {
+				display: block;
+			}
+
+			/* Alert inner layout */
+			.alert-inner {
+				position: relative;
+				z-index: 1;
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				padding: 20px 28px;
+			}
+
+			.alert-icon {
+				font-size: 36px;
+				flex-shrink: 0;
+			}
+
+			.alert-content {
+				flex: 1;
+			}
+
+			.alert-type-label {
+				font-size: 12px;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 1.5px;
+				opacity: 0.8;
+				margin-bottom: 4px;
+			}
+
+			.alert-username {
+				font-size: 24px;
+				font-weight: 800;
+				line-height: 1.2;
+			}
+
+			.alert-message {
+				font-size: 16px;
+				opacity: 0.9;
+				margin-top: 4px;
+				line-height: 1.3;
+			}
+
+			.alert-accent-bar {
+				position: relative;
+				z-index: 1;
+				height: 4px;
+				width: 100%;
+			}
+
+			/* --- Animations --- */
+
+			/* Slide In / Out */
+			@keyframes slideIn {
+				0% { transform: translateY(100px); opacity: 0; }
+				100% { transform: translateY(0); opacity: 1; }
+			}
+			@keyframes slideOut {
+				0% { transform: translateY(0); opacity: 1; }
+				100% { transform: translateY(100px); opacity: 0; }
+			}
+
+			/* Fade In / Out */
+			@keyframes fadeIn {
+				0% { opacity: 0; transform: scale(0.9); }
+				100% { opacity: 1; transform: scale(1); }
+			}
+			@keyframes fadeOut {
+				0% { opacity: 1; transform: scale(1); }
+				100% { opacity: 0; transform: scale(0.9); }
+			}
+
+			/* Bounce In / Out */
+			@keyframes bounceIn {
+				0% { transform: scale(0.3); opacity: 0; }
+				50% { transform: scale(1.08); opacity: 1; }
+				70% { transform: scale(0.95); }
+				100% { transform: scale(1); opacity: 1; }
+			}
+			@keyframes bounceOut {
+				0% { transform: scale(1); opacity: 1; }
+				30% { transform: scale(1.05); }
+				100% { transform: scale(0.3); opacity: 0; }
+			}
+
+			/* Animation classes */
+			.anim-slide-in { animation: slideIn 0.5s ease-out forwards; }
+			.anim-slide-out { animation: slideOut 0.4s ease-in forwards; }
+			.anim-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+			.anim-fade-out { animation: fadeOut 0.4s ease-in forwards; }
+			.anim-bounce-in { animation: bounceIn 0.6s ease-out forwards; }
+			.anim-bounce-out { animation: bounceOut 0.4s ease-in forwards; }
+		</style>
+	</head>
+	<body>
+		<div id="alert-container">
+			<div id="alert-box">
+				<div class="alert-bg-overlay" id="alert-bg-overlay"></div>
+				<div class="alert-inner">
+					<div class="alert-icon" id="alert-icon"></div>
+					<div class="alert-content">
+						<div class="alert-type-label" id="alert-type-label"></div>
+						<div class="alert-username" id="alert-username"></div>
+						<div class="alert-message" id="alert-message"></div>
+					</div>
+				</div>
+				<div class="alert-accent-bar" id="alert-accent-bar"></div>
+			</div>
+		</div>
+
+		<script type="module" src="./main.js"></script>
+	</body>
+</html>

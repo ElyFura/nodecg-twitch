@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" href="shared.css" />
+	</head>
+	<body>
+		<h2>Alert Queue</h2>
+
+		<!-- Connection Status -->
+		<div id="connection-status" class="status-indicator status-disconnected">
+			<span class="status-dot"></span>
+			<span id="status-text">Nicht verbunden</span>
+		</div>
+
+		<!-- Current Alert -->
+		<div class="card">
+			<h3>Aktueller Alert</h3>
+			<div id="current-alert" class="empty-state">Kein Alert aktiv</div>
+		</div>
+
+		<!-- Queue -->
+		<div class="card">
+			<h3>Warteschlange (<span id="queue-count">0</span>)</h3>
+			<ul id="queue-list" class="queue-list">
+				<li class="empty-state">Queue ist leer</li>
+			</ul>
+			<div class="btn-group" style="margin-top: 8px;">
+				<button id="btn-skip" class="btn-secondary btn-small">Alert überspringen</button>
+				<button id="btn-clear" class="btn-danger btn-small">Queue leeren</button>
+			</div>
+		</div>
+
+		<!-- Test Triggers -->
+		<div class="card">
+			<h3>Test Alerts</h3>
+			<div class="btn-group">
+				<button class="btn-test btn-primary btn-small" data-type="follow">Follow</button>
+				<button class="btn-test btn-primary btn-small" data-type="sub">Sub</button>
+				<button class="btn-test btn-primary btn-small" data-type="resub">Resub</button>
+				<button class="btn-test btn-primary btn-small" data-type="subgift">Gift Sub</button>
+				<button class="btn-test btn-small" data-type="bits" style="background:#ff8c00;color:#fff;">Bits</button>
+				<button class="btn-test btn-small" data-type="raid" style="background:#e91916;color:#fff;">Raid</button>
+				<button class="btn-test btn-small" data-type="channelpoints" style="background:#00c896;color:#fff;">Channel Points</button>
+			</div>
+		</div>
+
+		<script type="module" src="./alerts.js"></script>
+	</body>
+</html>

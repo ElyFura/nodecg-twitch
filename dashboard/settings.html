@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" href="shared.css" />
+	</head>
+	<body>
+		<h2>Twitch Einstellungen</h2>
+
+		<!-- Connection Status -->
+		<div id="connection-status" class="status-indicator status-disconnected">
+			<span class="status-dot"></span>
+			<span id="status-text">Nicht verbunden</span>
+		</div>
+
+		<!-- API Credentials -->
+		<div class="card">
+			<h3>API Zugangsdaten</h3>
+			<div class="form-group">
+				<label for="client-id">Client ID</label>
+				<input type="text" id="client-id" placeholder="Twitch Application Client ID" />
+			</div>
+			<div class="form-group">
+				<label for="client-secret">Client Secret</label>
+				<input type="password" id="client-secret" placeholder="Twitch Application Client Secret" />
+			</div>
+			<div class="form-group">
+				<label for="channel-name">Kanalname</label>
+				<input type="text" id="channel-name" placeholder="dein_kanalname" />
+			</div>
+			<div class="btn-group">
+				<button id="btn-save" class="btn-primary">Speichern</button>
+			</div>
+		</div>
+
+		<!-- OAuth Login -->
+		<div class="card">
+			<h3>Twitch Verbindung</h3>
+			<p style="font-size: 12px; color: #999; margin-bottom: 10px;">
+				Klicke auf "Mit Twitch verbinden" um dich zu authentifizieren.
+				Dein Access Token wird automatisch gespeichert und erneuert.
+			</p>
+			<div class="btn-group">
+				<button id="btn-connect" class="btn-success">Mit Twitch verbinden</button>
+				<button id="btn-reconnect" class="btn-secondary">Neu verbinden</button>
+			</div>
+		</div>
+
+		<!-- Scopes Info -->
+		<div class="card">
+			<h3>Benötigte Berechtigungen</h3>
+			<p style="font-size: 11px; color: #999; line-height: 1.6;">
+				moderator:read:followers &bull;
+				channel:read:subscriptions &bull;
+				bits:read &bull;
+				channel:read:redemptions
+			</p>
+			<p style="font-size: 11px; color: #999; margin-top: 6px;">
+				Redirect URI: <code style="color:#b9a3e3;">{host}/nodecg-twitch/auth/callback</code>
+			</p>
+		</div>
+
+		<script type="module" src="./settings.js"></script>
+	</body>
+</html>
