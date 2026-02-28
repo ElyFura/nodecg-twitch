@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="UTF-8" />
+		<style>
+			* { box-sizing: border-box; margin: 0; padding: 0; }
+
+			body {
+				width: 1920px;
+				height: 1080px;
+				overflow: hidden;
+				background: transparent;
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			}
+
+			#chat-container {
+				position: absolute;
+				overflow: hidden;
+				display: flex;
+				flex-direction: column;
+				justify-content: flex-end;
+			}
+
+			#chat-messages {
+				display: flex;
+				flex-direction: column;
+				justify-content: flex-end;
+				overflow: hidden;
+				height: 100%;
+			}
+
+			.chat-message {
+				display: flex;
+				align-items: flex-start;
+				gap: 4px;
+				padding: 4px 8px;
+				word-break: break-word;
+				line-height: 1.4;
+				transition: opacity 0.5s ease;
+			}
+
+			.chat-message.fading-out {
+				opacity: 0 !important;
+			}
+
+			.chat-badge {
+				width: 18px;
+				height: 18px;
+				vertical-align: middle;
+				flex-shrink: 0;
+				margin-top: 2px;
+			}
+
+			.chat-badges {
+				display: flex;
+				gap: 2px;
+				flex-shrink: 0;
+				align-items: center;
+			}
+
+			.chat-username {
+				font-weight: 700;
+				flex-shrink: 0;
+				white-space: nowrap;
+			}
+
+			.chat-text {
+				flex: 1;
+				min-width: 0;
+			}
+
+			.chat-timestamp {
+				font-size: 0.75em;
+				flex-shrink: 0;
+				margin-right: 4px;
+				white-space: nowrap;
+			}
+
+			.chat-emote {
+				display: inline;
+				height: 1.5em;
+				vertical-align: middle;
+				margin: -2px 1px;
+			}
+
+			/* Animations */
+			@keyframes chatSlideIn {
+				from { transform: translateX(-30px); opacity: 0; }
+				to { transform: translateX(0); opacity: 1; }
+			}
+
+			@keyframes chatFadeIn {
+				from { opacity: 0; }
+				to { opacity: 1; }
+			}
+
+			.chat-message.anim-slide {
+				animation: chatSlideIn 0.3s ease forwards;
+			}
+
+			.chat-message.anim-fade {
+				animation: chatFadeIn 0.3s ease forwards;
+			}
+
+			.chat-message.anim-none {
+				opacity: 1;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="chat-container">
+			<div id="chat-messages"></div>
+		</div>
+		<script type="module" src="./chat.js"></script>
+	</body>
+</html>

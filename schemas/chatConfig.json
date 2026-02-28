@@ -1,0 +1,141 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"enabled": {
+			"type": "boolean",
+			"default": true
+		},
+		"position": {
+			"type": "string",
+			"enum": ["top-left", "top-right", "bottom-left", "bottom-right", "custom"],
+			"default": "bottom-right"
+		},
+		"customX": {
+			"type": "number",
+			"default": 1420
+		},
+		"customY": {
+			"type": "number",
+			"default": 480
+		},
+		"width": {
+			"type": "number",
+			"default": 450
+		},
+		"height": {
+			"type": "number",
+			"default": 550
+		},
+		"backgroundColor": {
+			"type": "string",
+			"default": "#000000"
+		},
+		"backgroundOpacity": {
+			"type": "number",
+			"default": 0.6,
+			"minimum": 0,
+			"maximum": 1
+		},
+		"textColor": {
+			"type": "string",
+			"default": "#ffffff"
+		},
+		"fontFamily": {
+			"type": "string",
+			"default": ""
+		},
+		"fontSize": {
+			"type": "number",
+			"default": 16
+		},
+		"maxMessages": {
+			"type": "integer",
+			"default": 25,
+			"minimum": 5,
+			"maximum": 100
+		},
+		"fadeOutSeconds": {
+			"type": "number",
+			"default": 0,
+			"minimum": 0,
+			"maximum": 300
+		},
+		"showBadges": {
+			"type": "boolean",
+			"default": true
+		},
+		"showTimestamps": {
+			"type": "boolean",
+			"default": false
+		},
+		"showEmotes": {
+			"type": "boolean",
+			"default": true
+		},
+		"useTwitchColors": {
+			"type": "boolean",
+			"default": true
+		},
+		"defaultUsernameColor": {
+			"type": "string",
+			"default": "#b9a3e3"
+		},
+		"hideBotMessages": {
+			"type": "boolean",
+			"default": false
+		},
+		"botUsernames": {
+			"type": "string",
+			"default": "Nightbot,StreamElements,Moobot,Streamlabs,Fossabot"
+		},
+		"hideCommands": {
+			"type": "boolean",
+			"default": false
+		},
+		"hiddenUsers": {
+			"type": "string",
+			"default": ""
+		},
+		"animation": {
+			"type": "string",
+			"enum": ["slide", "fade", "none"],
+			"default": "slide"
+		},
+		"borderRadius": {
+			"type": "number",
+			"default": 8
+		},
+		"messageSpacing": {
+			"type": "number",
+			"default": 4
+		}
+	},
+	"default": {
+		"enabled": true,
+		"position": "bottom-right",
+		"customX": 1420,
+		"customY": 480,
+		"width": 450,
+		"height": 550,
+		"backgroundColor": "#000000",
+		"backgroundOpacity": 0.6,
+		"textColor": "#ffffff",
+		"fontFamily": "",
+		"fontSize": 16,
+		"maxMessages": 25,
+		"fadeOutSeconds": 0,
+		"showBadges": true,
+		"showTimestamps": false,
+		"showEmotes": true,
+		"useTwitchColors": true,
+		"defaultUsernameColor": "#b9a3e3",
+		"hideBotMessages": false,
+		"botUsernames": "Nightbot,StreamElements,Moobot,Streamlabs,Fossabot",
+		"hideCommands": false,
+		"hiddenUsers": "",
+		"animation": "slide",
+		"borderRadius": 8,
+		"messageSpacing": 4
+	}
+}

@@ -48,6 +48,14 @@
         "file": "settings.html",
         "headerColor": "#333333",
         "workspace": "Setup"
+      },
+      {
+        "name": "chat-settings",
+        "title": "Chat Overlay",
+        "width": 4,
+        "file": "chat-settings.html",
+        "headerColor": "#6441a5",
+        "workspace": "Chat"
       }
     ],
     "graphics": [
@@ -59,6 +67,12 @@
       },
       {
         "file": "goals.html",
+        "width": 1920,
+        "height": 1080,
+        "singleInstance": true
+      },
+      {
+        "file": "chat.html",
         "width": 1920,
         "height": 1080,
         "singleInstance": true

@@ -10,9 +10,11 @@ const TWITCH_SCOPES = [
 	'channel:read:subscriptions',
 	'bits:read',
 	'channel:read:redemptions',
+	'user:read:chat',
 ];
 
 const ALERT_HISTORY_LIMIT = 50;
+const CHAT_MESSAGE_LIMIT = 100;
 
 const DEFAULT_PRIORITIES = {
 	follow: 3,
@@ -34,6 +36,8 @@ module.exports = function (nodecg) {
 	const alertHistory = nodecg.Replicant('alertHistory');
 	const alertStats = nodecg.Replicant('alertStats');
 	const goals = nodecg.Replicant('goals');
+	const chatConfig = nodecg.Replicant('chatConfig');
+	const chatMessages = nodecg.Replicant('chatMessages');
 
 	let listener = null;
 	let apiClient = null;
@@ -89,6 +93,35 @@ module.exports = function (nodecg) {
 			goal.current += alert.amount || 0;
 		} else {
 			goal.current++;
+		}
+	}
+
+	// --- Chat Message Handling ---
+	function pushChatMessage(msg) {
+		const config = chatConfig.value;
+		if (!config || !config.enabled) return;
+
+		// Filter: hide commands (messages starting with !)
+		if (config.hideCommands && msg.text.startsWith('!')) return;
+
+		// Filter: hide bot messages
+		if (config.hideBotMessages && config.botUsernames) {
+			const bots = config.botUsernames.split(',').map((b) => b.trim().toLowerCase());
+			if (bots.includes(msg.username.toLowerCase())) return;
+		}
+
+		// Filter: hidden users
+		if (config.hiddenUsers) {
+			const hidden = config.hiddenUsers.split(',').map((u) => u.trim().toLowerCase()).filter(Boolean);
+			if (hidden.includes(msg.username.toLowerCase())) return;
+		}
+
+		if (!chatMessages.value) {
+			chatMessages.value = [];
+		}
+		chatMessages.value.push(msg);
+		if (chatMessages.value.length > CHAT_MESSAGE_LIMIT) {
+			chatMessages.value.splice(0, chatMessages.value.length - CHAT_MESSAGE_LIMIT);
 		}
 	}
 
@@ -327,6 +360,49 @@ module.exports = function (nodecg) {
 				});
 			});
 
+			// --- Chat Messages ---
+			listener.onChannelChatMessage(userId, userId, (event) => {
+				try {
+					// Normalize badges: could be Map, Array, plain object, or undefined
+					let badges = {};
+					if (event.badges) {
+						if (typeof event.badges[Symbol.iterator] === 'function') {
+							badges = Object.fromEntries(event.badges);
+						} else if (typeof event.badges === 'object') {
+							badges = Object.assign({}, event.badges);
+						}
+					}
+
+					// Normalize fragments: messageParts may not exist in all event types
+					let fragments = [];
+					if (event.messageParts && Array.isArray(event.messageParts)) {
+						fragments = event.messageParts.map((part) => ({
+							type: part.type,
+							text: part.text,
+							emoteId: part.type === 'emote' && part.emote ? part.emote.id : undefined,
+						}));
+					}
+
+					pushChatMessage({
+						id: event.messageId,
+						username: event.chatterName,
+						displayName: event.chatterDisplayName,
+						color: event.color || null,
+						text: event.messageText,
+						badges,
+						fragments,
+						timestamp: Date.now(),
+					});
+				} catch (err) {
+					nodecg.log.error('Chat-Nachricht Fehler:', err.message);
+					nodecg.log.error('Event-Daten:', JSON.stringify({
+						badges: typeof event.badges,
+						messageParts: typeof event.messageParts,
+						keys: event.badges ? Object.getOwnPropertyNames(event.badges).slice(0, 5) : null,
+					}));
+				}
+			});
+
 			listener.start();
 
 			connectionStatus.value = {
@@ -542,6 +618,27 @@ module.exports = function (nodecg) {
 		if (data.label !== undefined) goal.label = data.label;
 		if (data.showInOverlay !== undefined) goal.showInOverlay = !!data.showInOverlay;
 		if (data.barColor !== undefined) goal.barColor = data.barColor;
+	});
+
+	nodecg.listenFor('clearChat', () => {
+		chatMessages.value = [];
+		nodecg.log.info('Chat-Nachrichten geleert.');
+	});
+
+	nodecg.listenFor('sendTestChatMessage', () => {
+		pushChatMessage({
+			id: 'test-' + crypto.randomUUID(),
+			username: 'testuser',
+			displayName: 'TestUser',
+			color: '#FF69B4',
+			text: 'Das ist eine Test-Nachricht! PogChamp',
+			badges: { broadcaster: '1' },
+			fragments: [
+				{ type: 'text', text: 'Das ist eine Test-Nachricht! ' },
+				{ type: 'emote', text: 'PogChamp', emoteId: '305954156' },
+			],
+			timestamp: Date.now(),
+		});
 	});
 
 	nodecg.listenFor('resetGoal', (data) => {
