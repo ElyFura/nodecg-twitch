@@ -8,13 +8,44 @@ const alertDelayInput = document.getElementById('alert-delay');
 const redirectUriInput = document.getElementById('redirect-uri');
 const redirectUriDisplay = document.getElementById('redirect-uri-display');
 const btnSave = document.getElementById('btn-save');
-const btnSaveDelay = document.getElementById('btn-save-delay');
-const btnSaveRedirect = document.getElementById('btn-save-redirect');
 const btnConnect = document.getElementById('btn-connect');
 const btnReconnect = document.getElementById('btn-reconnect');
 const btnDisconnect = document.getElementById('btn-disconnect');
 const statusIndicator = document.getElementById('connection-status');
 const statusText = document.getElementById('status-text');
+const statusHelp = document.getElementById('status-help');
+
+const step1 = document.getElementById('step-1');
+const step2 = document.getElementById('step-2');
+const step3 = document.getElementById('step-3');
+
+// --- Setup Steps ---
+function updateSetupSteps(settingsVal, connStatus) {
+	const hasCredentials = !!(settingsVal && settingsVal.clientId && settingsVal.clientSecret && settingsVal.channelName);
+	const isConnected = connStatus && connStatus.status === 'connected';
+
+	step1.className = 'setup-step' + (hasCredentials ? ' done' : ' active');
+	step2.className = 'setup-step' + (isConnected ? ' done' : (hasCredentials ? ' active' : ''));
+	step3.className = 'setup-step' + (isConnected ? ' done' : '');
+}
+
+// --- Connection Buttons: show only relevant ---
+function updateConnectionButtons(connStatus) {
+	const status = connStatus ? connStatus.status : 'disconnected';
+	if (status === 'connected') {
+		btnConnect.style.display = 'none';
+		btnReconnect.style.display = '';
+		btnDisconnect.style.display = '';
+	} else if (status === 'connecting') {
+		btnConnect.style.display = 'none';
+		btnReconnect.style.display = 'none';
+		btnDisconnect.style.display = '';
+	} else {
+		btnConnect.style.display = '';
+		btnReconnect.style.display = 'none';
+		btnDisconnect.style.display = 'none';
+	}
+}
 
 // Load settings into inputs
 settings.on('change', (newVal) => {
@@ -31,6 +62,8 @@ settings.on('change', (newVal) => {
 	} else {
 		redirectUriDisplay.textContent = `${window.location.origin}/nodecg-twitch/auth/callback`;
 	}
+
+	updateSetupSteps(newVal, connectionStatus.value);
 });
 
 // Update connection status display
@@ -45,32 +78,29 @@ connectionStatus.on('change', (newVal) => {
 		error: 'Fehler',
 	};
 	statusText.textContent = newVal.message || statusLabels[newVal.status] || newVal.status;
+
+	// Show help text on error
+	if (newVal.status === 'error') {
+		statusHelp.textContent = 'Pruefe Client ID, Secret und Kanalname. Stimmt die Redirect URI?';
+		statusHelp.style.display = '';
+	} else {
+		statusHelp.style.display = 'none';
+	}
+
+	updateConnectionButtons(newVal);
+	updateSetupSteps(settings.value, newVal);
 });
 
-// Save settings
+// Save all settings with one button
 btnSave.addEventListener('click', () => {
 	settings.value.clientId = clientIdInput.value.trim();
 	settings.value.clientSecret = clientSecretInput.value.trim();
 	settings.value.channelName = channelNameInput.value.trim().toLowerCase();
-
-	btnSave.textContent = 'Gespeichert!';
-	setTimeout(() => { btnSave.textContent = 'Speichern'; }, 1500);
-});
-
-// Save alert delay
-btnSaveDelay.addEventListener('click', () => {
 	settings.value.alertDelay = parseInt(alertDelayInput.value) || 500;
-
-	btnSaveDelay.textContent = 'Gespeichert!';
-	setTimeout(() => { btnSaveDelay.textContent = 'Delay speichern'; }, 1500);
-});
-
-// Save redirect URI
-btnSaveRedirect.addEventListener('click', () => {
 	settings.value.redirectUri = redirectUriInput.value.trim();
 
-	btnSaveRedirect.textContent = 'Gespeichert!';
-	setTimeout(() => { btnSaveRedirect.textContent = 'Redirect URI speichern'; }, 1500);
+	btnSave.textContent = 'Gespeichert!';
+	setTimeout(() => { btnSave.textContent = 'Alle Einstellungen speichern'; }, 1500);
 });
 
 // Open OAuth popup
@@ -90,4 +120,19 @@ btnReconnect.addEventListener('click', () => {
 // Disconnect
 btnDisconnect.addEventListener('click', () => {
 	nodecg.sendMessage('disconnect');
+});
+
+// --- Collapsible Sections ---
+document.querySelectorAll('.collapsible-header').forEach((header) => {
+	header.addEventListener('click', () => {
+		const targetId = header.dataset.target;
+		const content = document.getElementById(targetId);
+		const chevron = header.querySelector('.chevron');
+		if (content) {
+			content.classList.toggle('open');
+		}
+		if (chevron) {
+			chevron.classList.toggle('open');
+		}
+	});
 });

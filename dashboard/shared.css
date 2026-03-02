@@ -187,13 +187,14 @@ button {
 
 .alert-type-badge {
 	display: inline-block;
-	padding: 2px 8px;
+	padding: 3px 10px;
 	border-radius: 10px;
 	font-size: 11px;
 	font-weight: 700;
 	text-transform: uppercase;
 	min-width: 60px;
 	text-align: center;
+	letter-spacing: 0.3px;
 }
 
 .badge-follow { background: #6441a5; color: #fff; }
@@ -252,6 +253,125 @@ button {
 	padding: 20px;
 	color: #7f8c8d;
 	font-size: 13px;
+}
+
+/* Section Divider */
+.section-divider {
+	border: none;
+	border-top: 1px solid #2a2a4a;
+	margin: 12px 0;
+}
+
+/* Help Text */
+.help-text {
+	display: block;
+	font-size: 11px;
+	color: #6b7f99;
+	margin-top: 2px;
+	margin-bottom: 8px;
+	line-height: 1.4;
+}
+
+/* Info Box */
+.info-box {
+	background: rgba(100, 65, 165, 0.12);
+	border: 1px solid rgba(100, 65, 165, 0.3);
+	border-radius: 6px;
+	padding: 10px 12px;
+	margin-bottom: 12px;
+	font-size: 12px;
+	color: #b9bfcf;
+	line-height: 1.5;
+}
+.info-box::before {
+	content: "\2139\FE0F";
+	margin-right: 6px;
+}
+.info-box a {
+	color: #b9a3e3;
+	text-decoration: underline;
+}
+.info-box a:hover {
+	color: #d4c4f0;
+}
+
+/* Setup Steps */
+.setup-steps {
+	display: flex;
+	gap: 0;
+	margin-bottom: 16px;
+	counter-reset: step;
+}
+.setup-step {
+	flex: 1;
+	text-align: center;
+	padding: 8px 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #7f8c8d;
+	position: relative;
+	border-bottom: 3px solid #3a3a5c;
+	transition: all 0.3s;
+}
+.setup-step.active {
+	color: #b9a3e3;
+	border-bottom-color: #6441a5;
+}
+.setup-step.done {
+	color: #2ecc71;
+	border-bottom-color: #2ecc71;
+}
+.setup-step .step-number {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	line-height: 20px;
+	border-radius: 50%;
+	background: #3a3a5c;
+	color: #e0e0e0;
+	font-size: 11px;
+	margin-right: 4px;
+}
+.setup-step.active .step-number {
+	background: #6441a5;
+	color: #fff;
+}
+.setup-step.done .step-number {
+	background: #27ae60;
+	color: #fff;
+}
+
+/* Collapsible Sections */
+.collapsible-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	padding: 8px 0;
+	user-select: none;
+}
+.collapsible-header h3 {
+	margin: 0;
+	flex: 1;
+}
+.collapsible-header .chevron {
+	font-size: 12px;
+	color: #7f8c8d;
+	transition: transform 0.2s;
+	flex-shrink: 0;
+}
+.collapsible-header .chevron.open {
+	transform: rotate(90deg);
+}
+.collapsible-content {
+	overflow: hidden;
+	max-height: 0;
+	opacity: 0;
+	transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+.collapsible-content.open {
+	max-height: 5000px;
+	opacity: 1;
 }
 
 /* Scrollbar */

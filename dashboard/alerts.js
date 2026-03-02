@@ -22,7 +22,7 @@ const TYPE_LABELS = {
 	subgift: 'Gift Sub',
 	bits: 'Bits',
 	raid: 'Raid',
-	channelpoints: 'CP',
+	channelpoints: 'Channel Points',
 };
 
 function renderQueue(queue) {
@@ -38,7 +38,7 @@ function renderQueue(queue) {
 			<span class="alert-type-badge badge-${alert.type}">${TYPE_LABELS[alert.type] || alert.type}</span>
 			<span>${alert.username}</span>
 			${alert.amount ? `<span style="color:#999;font-size:11px;">(${alert.amount})</span>` : ''}
-			<span class="priority-badge">P${alert.priority || 5}</span>
+			<span class="priority-badge" title="Hoehere Prioritaet = wird zuerst angezeigt">P${alert.priority || 5}</span>
 		</li>
 	`).join('');
 }
@@ -131,7 +131,7 @@ document.getElementById('btn-skip').addEventListener('click', () => {
 
 // Clear queue
 document.getElementById('btn-clear').addEventListener('click', () => {
-	if (confirm('Alle Alerts in der Queue löschen?')) {
+	if (confirm('Alle Alerts in der Queue loeschen?')) {
 		nodecg.sendMessage('clearQueue');
 	}
 });
@@ -176,16 +176,16 @@ alertStats.on('change', (newVal) => {
 });
 
 document.getElementById('btn-reset-stats').addEventListener('click', () => {
-	if (confirm('Statistiken zurücksetzen?')) {
+	if (confirm('Statistiken zuruecksetzen?')) {
 		nodecg.sendMessage('resetStats');
 	}
 });
 
 // --- Goals ---
 const GOAL_DEFS = [
-	{ key: 'followGoal', label: 'Follow-Goal', icon: '❤️' },
-	{ key: 'subGoal', label: 'Sub-Goal', icon: '⭐' },
-	{ key: 'bitsGoal', label: 'Bits-Goal', icon: '💎' },
+	{ key: 'followGoal', label: 'Follow-Goal', icon: '\u2764\uFE0F' },
+	{ key: 'subGoal', label: 'Sub-Goal', icon: '\u2B50' },
+	{ key: 'bitsGoal', label: 'Bits-Goal', icon: '\uD83D\uDC8E' },
 ];
 const goalsContainer = document.getElementById('goals-container');
 
@@ -200,29 +200,40 @@ function renderGoals(goalsVal) {
 		const pct = g.target > 0 ? Math.min(100, Math.round((g.current / g.target) * 100)) : 0;
 		const barColor = g.barColor || '#6441a5';
 		return `
-			<div style="margin-bottom:8px;" data-goal="${key}">
-				<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+			<div style="margin-bottom:10px;padding:8px;background:rgba(255,255,255,0.02);border-radius:4px;" data-goal="${key}">
+				<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
 					<label class="toggle" style="margin-bottom:0;">
 						<input type="checkbox" class="goal-enabled" data-goal="${key}" ${g.enabled ? 'checked' : ''} autocomplete="off" />
 						<span class="toggle-slider"></span>
 					</label>
 					<span>${icon}</span>
 					<strong style="font-size:12px;">${g.label || label}</strong>
-					<span style="font-size:11px;color:#7f8c8d;margin-left:auto;">${g.current} / ${g.target} (${pct}%)</span>
+					<span style="font-size:12px;color:#b9a3e3;margin-left:auto;font-weight:700;">${g.current} / ${g.target} (${pct}%)</span>
 				</div>
-				<div style="background:#1a1a2e;border-radius:4px;height:12px;overflow:hidden;">
+				<div style="background:#1a1a2e;border-radius:4px;height:14px;overflow:hidden;margin-bottom:6px;">
 					<div style="background:${barColor};height:100%;width:${pct}%;transition:width 0.3s;border-radius:4px;"></div>
 				</div>
-				<div style="display:flex;gap:4px;margin-top:4px;">
-					<input type="text" class="goal-label" data-goal="${key}" value="${g.label || ''}" placeholder="Label" style="width:80px;font-size:11px;padding:2px 4px;" />
-					<input type="number" class="goal-target" data-goal="${key}" value="${g.target}" min="1" style="width:60px;font-size:11px;padding:2px 4px;" />
-					<input type="color" class="goal-color" data-goal="${key}" value="${barColor}" style="width:30px;height:22px;padding:1px;" />
-					<label class="toggle" style="margin-bottom:0;" title="Im Overlay anzeigen">
-						<input type="checkbox" class="goal-overlay" data-goal="${key}" ${g.showInOverlay ? 'checked' : ''} autocomplete="off" />
-						<span class="toggle-slider"></span>
-					</label>
-					<span style="font-size:10px;color:#7f8c8d;align-self:center;">Overlay</span>
-					<button class="btn-secondary btn-small goal-reset" data-goal="${key}" style="margin-left:auto;font-size:10px;padding:2px 6px;">Reset</button>
+				<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+					<div style="display:flex;flex-direction:column;gap:1px;">
+						<span style="font-size:10px;color:#7f8c8d;">Label</span>
+						<input type="text" class="goal-label" data-goal="${key}" value="${g.label || ''}" placeholder="Label" style="width:90px;font-size:11px;padding:3px 6px;" />
+					</div>
+					<div style="display:flex;flex-direction:column;gap:1px;">
+						<span style="font-size:10px;color:#7f8c8d;">Ziel</span>
+						<input type="number" class="goal-target" data-goal="${key}" value="${g.target}" min="1" style="width:65px;font-size:11px;padding:3px 6px;" />
+					</div>
+					<div style="display:flex;flex-direction:column;gap:1px;">
+						<span style="font-size:10px;color:#7f8c8d;">Farbe</span>
+						<input type="color" class="goal-color" data-goal="${key}" value="${barColor}" style="width:30px;height:24px;padding:1px;" />
+					</div>
+					<div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+						<label class="toggle" style="margin-bottom:0;">
+							<input type="checkbox" class="goal-overlay" data-goal="${key}" ${g.showInOverlay ? 'checked' : ''} autocomplete="off" />
+							<span class="toggle-slider"></span>
+						</label>
+						<span style="font-size:11px;color:#ccc;">Im Overlay anzeigen</span>
+					</div>
+					<button class="btn-secondary btn-small goal-reset" data-goal="${key}" style="margin-left:auto;font-size:10px;padding:2px 8px;">Reset</button>
 				</div>
 			</div>
 		`;
@@ -263,4 +274,19 @@ function renderGoals(goalsVal) {
 
 goals.on('change', (newVal) => {
 	renderGoals(newVal);
+});
+
+// --- Collapsible Sections ---
+document.querySelectorAll('.collapsible-header').forEach((header) => {
+	header.addEventListener('click', () => {
+		const targetId = header.dataset.target;
+		const content = document.getElementById(targetId);
+		const chevron = header.querySelector('.chevron');
+		if (content) {
+			content.classList.toggle('open');
+		}
+		if (chevron) {
+			chevron.classList.toggle('open');
+		}
+	});
 });

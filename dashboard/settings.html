@@ -7,53 +7,70 @@
 	<body>
 		<h2>Twitch Einstellungen</h2>
 
+		<!-- Setup Steps -->
+		<div class="setup-steps">
+			<div class="setup-step" id="step-1">
+				<span class="step-number">1</span> API-Daten
+			</div>
+			<div class="setup-step" id="step-2">
+				<span class="step-number">2</span> Verbinden
+			</div>
+			<div class="setup-step" id="step-3">
+				<span class="step-number">3</span> Fertig
+			</div>
+		</div>
+
 		<!-- Connection Status -->
 		<div id="connection-status" class="status-indicator status-disconnected">
 			<span class="status-dot"></span>
 			<span id="status-text">Nicht verbunden</span>
 		</div>
+		<span id="status-help" class="help-text" style="display:none;"></span>
 
-		<!-- API Credentials -->
+		<!-- API Credentials + Redirect URI (combined) -->
 		<div class="card">
 			<h3>API Zugangsdaten</h3>
+			<div class="info-box">
+				Erstelle eine App unter
+				<a href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">dev.twitch.tv/console/apps</a>
+				und trage Client ID &amp; Secret hier ein.
+			</div>
 			<div class="form-group">
 				<label for="client-id">Client ID</label>
-				<input type="text" id="client-id" placeholder="Twitch Application Client ID" />
+				<input type="text" id="client-id" placeholder="z.B. abc123def456ghi789..." />
+				<span class="help-text">Findest du unter dev.twitch.tv &rarr; Deine App &rarr; Client ID</span>
 			</div>
 			<div class="form-group">
 				<label for="client-secret">Client Secret</label>
-				<input type="password" id="client-secret" placeholder="Twitch Application Client Secret" />
+				<input type="password" id="client-secret" placeholder="z.B. xyz789abc123def456..." />
+				<span class="help-text">Unter "Neues Geheimnis" in deiner Twitch-App generieren</span>
 			</div>
 			<div class="form-group">
 				<label for="channel-name">Kanalname</label>
-				<input type="text" id="channel-name" placeholder="dein_kanalname" />
+				<input type="text" id="channel-name" placeholder="z.B. dein_kanalname" />
+				<span class="help-text">Dein Twitch-Kanalname (kleingeschrieben)</span>
 			</div>
-			<div class="btn-group">
-				<button id="btn-save" class="btn-primary">Speichern</button>
-			</div>
-		</div>
 
-		<!-- Alert Settings -->
-		<div class="card">
-			<h3>Alert-Einstellungen</h3>
+			<hr class="section-divider" />
+
 			<div class="form-group">
 				<label for="alert-delay">Pause zwischen Alerts (ms)</label>
 				<input type="number" id="alert-delay" min="0" max="10000" step="100" value="500" />
+				<span class="help-text">Wartezeit zwischen zwei aufeinanderfolgenden Alerts</span>
 			</div>
-			<div class="btn-group">
-				<button id="btn-save-delay" class="btn-primary btn-small">Delay speichern</button>
-			</div>
-		</div>
 
-		<!-- Redirect URI -->
-		<div class="card">
-			<h3>Redirect URI</h3>
+			<hr class="section-divider" />
+
 			<div class="form-group">
-				<label for="redirect-uri">Eigene Redirect URI (leer = automatisch)</label>
-				<input type="text" id="redirect-uri" placeholder="https://example.com/nodecg-twitch/auth/callback" />
+				<label for="redirect-uri">Redirect URI (optional)</label>
+				<input type="text" id="redirect-uri" placeholder="Leer lassen fuer automatische Erkennung" />
+				<span class="help-text">Nur noetig wenn du eine eigene Domain nutzt. Standard:
+					<code id="redirect-uri-display" style="color:#b9a3e3;">{host}/nodecg-twitch/auth/callback</code>
+				</span>
 			</div>
+
 			<div class="btn-group">
-				<button id="btn-save-redirect" class="btn-primary btn-small">Redirect URI speichern</button>
+				<button id="btn-save" class="btn-primary">Alle Einstellungen speichern</button>
 			</div>
 		</div>
 
@@ -64,26 +81,29 @@
 				Klicke auf "Mit Twitch verbinden" um dich zu authentifizieren.
 				Dein Access Token wird automatisch gespeichert und erneuert.
 			</p>
-			<div class="btn-group">
+			<div class="btn-group" id="connection-buttons">
 				<button id="btn-connect" class="btn-success">Mit Twitch verbinden</button>
-				<button id="btn-reconnect" class="btn-secondary">Neu verbinden</button>
-				<button id="btn-disconnect" class="btn-danger">Trennen</button>
+				<button id="btn-reconnect" class="btn-secondary" style="display:none;">Neu verbinden</button>
+				<button id="btn-disconnect" class="btn-danger" style="display:none;">Trennen</button>
 			</div>
 		</div>
 
-		<!-- Scopes Info -->
+		<!-- Scopes Info (Collapsible) -->
 		<div class="card">
-			<h3>Benötigte Berechtigungen</h3>
-			<p style="font-size: 11px; color: #999; line-height: 1.6;">
-				moderator:read:followers &bull;
-				channel:read:subscriptions &bull;
-				bits:read &bull;
-				channel:read:redemptions &bull;
-				user:read:chat
-			</p>
-			<p style="font-size: 11px; color: #999; margin-top: 6px;">
-				Redirect URI: <code id="redirect-uri-display" style="color:#b9a3e3;">{host}/nodecg-twitch/auth/callback</code>
-			</p>
+			<div class="collapsible-header" data-target="scopes-content">
+				<h3 style="margin:0;">Welche Berechtigungen werden benoetigt?</h3>
+				<span class="chevron">&#9654;</span>
+			</div>
+			<div class="collapsible-content" id="scopes-content">
+				<p style="font-size: 12px; color: #999; line-height: 1.8; padding-top: 8px;">
+					<strong>moderator:read:followers</strong> &ndash; Follower-Events empfangen<br />
+					<strong>channel:read:subscriptions</strong> &ndash; Sub-Events empfangen<br />
+					<strong>bits:read</strong> &ndash; Bit-Events empfangen<br />
+					<strong>channel:read:redemptions</strong> &ndash; Channel-Point-Einloesungen<br />
+					<strong>user:read:chat</strong> &ndash; Chat-Nachrichten lesen
+				</p>
+				<span class="help-text">Diese Berechtigungen werden beim OAuth-Login automatisch angefragt.</span>
+			</div>
 		</div>
 
 		<script type="module" src="./settings.js"></script>

@@ -54,6 +54,16 @@ const PREVIEW_SAMPLE = {
 	tier: '1',
 };
 
+const MESSAGE_PLACEHOLDERS = {
+	follow: '{username} folgt dir jetzt!',
+	sub: '{username} hat abonniert (Tier {tier})!',
+	resub: '{username} hat erneut abonniert! ({amount} Monate)',
+	subgift: '{username} hat ein Sub verschenkt!',
+	bits: '{username} hat {amount} Bits gecheert! {message}',
+	raid: '{username} raidet mit {amount} Viewern!',
+	channelpoints: '{username} hat Channel Points eingeloest: {message}',
+};
+
 const container = document.getElementById('alert-types');
 const btnSave = document.getElementById('btn-save-config');
 const btnSaveTop = document.getElementById('btn-save-config-top');
@@ -101,213 +111,22 @@ function buildPositionOptions() {
 function buildEditorUI() {
 	container.innerHTML = ALERT_TYPES.map(({ key, label, color }) => {
 		const info = TYPE_INFO[key] || { label: key, icon: '\uD83D\uDD14' };
+		const msgPlaceholder = MESSAGE_PLACEHOLDERS[key] || '{username}';
 		return `
 		<div class="card alert-type-section" data-type="${key}">
-			<div class="alert-type-header">
+			<!-- Collapsible Header with Enabled toggle + Preview always visible -->
+			<div class="alert-type-header" data-collapse-target="alert-body-${key}">
 				<span class="alert-type-badge" style="background:${color};color:#fff;">${label}</span>
 				<h3>${label}</h3>
-				<label class="toggle" style="margin-bottom:0;">
+				<label class="toggle" style="margin-bottom:0;" onclick="event.stopPropagation();">
 					<input type="checkbox" data-field="enabled" autocomplete="off" />
 					<span class="toggle-slider"></span>
 				</label>
+				<span class="chevron">&#9654;</span>
 			</div>
 
-			<div class="config-row">
-				<label>Dauer (Sek.)</label>
-				<input type="number" data-field="duration" min="1" max="30" step="0.5" value="5" style="max-width:80px;" />
-			</div>
-
-			<div class="config-row">
-				<label>Nachricht</label>
-				<input type="text" data-field="messageTemplate" placeholder="{username} ..." />
-			</div>
-
-			<div class="config-row">
-				<label>Animation</label>
-				<select data-field="animation">
-					<option value="slide">Slide</option>
-					<option value="fade">Fade</option>
-					<option value="bounce">Bounce</option>
-				</select>
-			</div>
-
-			<div class="config-row">
-				<label>Position</label>
-				<select data-field="position">
-					${buildPositionOptions()}
-				</select>
-			</div>
-
-			<div class="config-row">
-				<label>Hintergrund</label>
-				<select data-field="backgroundImage">
-					<option value="">Keine (Nur Farbe)</option>
-				</select>
-			</div>
-
-			<div class="config-row">
-				<label>Icon</label>
-				<select data-field="iconUrl">
-					<option value="">Standard-Emoji</option>
-				</select>
-			</div>
-
-			<div class="config-row">
-				<label>Farben</label>
-				<div class="color-group">
-					<label>Hintergrund</label>
-					<input type="color" data-field="backgroundColor" value="${color}" />
-					<label>Text</label>
-					<input type="color" data-field="textColor" value="#ffffff" />
-					<label>Akzent</label>
-					<input type="color" data-field="accentColor" value="#b9a3e3" />
-				</div>
-			</div>
-
-			<div class="config-row">
-				<label>Schriftart</label>
-				<select data-field="fontFamily">
-					${buildFontOptions()}
-				</select>
-			</div>
-
-			<div class="config-row">
-				<label>Schriftgröße</label>
-				<input type="number" data-field="fontSize" min="12" max="72" step="1" value="24" style="max-width:80px;" />
-				<span class="hint-text">px</span>
-			</div>
-
-			<div class="config-row">
-				<label>Text-Effekte</label>
-				<div class="toggle-group">
-					<span class="toggle-label">Schatten</span>
-					<label class="toggle" style="margin-bottom:0;">
-						<input type="checkbox" data-field="textShadow" autocomplete="off" />
-						<span class="toggle-slider"></span>
-					</label>
-					<input type="color" data-field="textShadowColor" value="#000000" title="Schattenfarbe" />
-					<span class="toggle-label">Outline</span>
-					<label class="toggle" style="margin-bottom:0;">
-						<input type="checkbox" data-field="textOutline" autocomplete="off" />
-						<span class="toggle-slider"></span>
-					</label>
-					<input type="color" data-field="textOutlineColor" value="#000000" title="Outlinefarbe" />
-				</div>
-			</div>
-
-			<div class="config-row">
-				<label>Overlay-Deckkraft</label>
-				<input type="range" data-field="overlayOpacity" min="0" max="1" step="0.05" value="0.7" style="flex:1;" />
-				<span class="range-value" data-label="overlayOpacity">0.70</span>
-			</div>
-
-			<div class="config-row">
-				<label>Anim.-Speed</label>
-				<span class="hint-text">Rein:</span>
-				<input type="number" data-field="animationInDuration" min="100" max="3000" step="50" value="500" style="max-width:80px;" />
-				<span class="hint-text">Raus:</span>
-				<input type="number" data-field="animationOutDuration" min="100" max="3000" step="50" value="400" style="max-width:80px;" />
-				<span class="hint-text">ms</span>
-			</div>
-
-			<div class="config-row">
-				<label>Sound</label>
-				<label class="toggle" style="margin-bottom:0;">
-					<input type="checkbox" data-field="soundEnabled" autocomplete="off" />
-					<span class="toggle-slider"></span>
-				</label>
-			</div>
-
-			<div class="config-row">
-				<label>Priorität</label>
-				<input type="number" data-field="priority" min="1" max="10" step="1" value="${DEFAULT_PRIORITIES[key] || 5}" style="max-width:80px;" />
-				<span class="hint-text">1 (niedrig) – 10 (hoch)</span>
-			</div>
-
-			<div class="config-row" style="align-items:flex-start;">
-				<label>Custom CSS</label>
-				<textarea data-field="customCss" rows="3" style="flex:1;font-family:monospace;font-size:12px;resize:vertical;" placeholder="#alert-box { border: 3px solid gold; }&#10;.alert-username { text-transform: uppercase; }"></textarea>
-			</div>
-
-			<div class="config-row">
-				<label>Min. Amount</label>
-				<input type="number" data-field="minAmount" min="0" step="1" value="0" style="max-width:80px;" />
-				<span class="hint-text">0 = kein Filter</span>
-			</div>
-
-			<div class="config-row">
-				<label>Min. Tier</label>
-				<select data-field="minTier" style="max-width:140px;">
-					<option value="">Alle Tiers</option>
-					<option value="1000">Tier 1+</option>
-					<option value="2000">Tier 2+</option>
-					<option value="3000">Nur Tier 3</option>
-				</select>
-			</div>
-
-			<div class="config-row">
-				<label>Cooldown</label>
-				<input type="number" data-field="cooldown" min="0" step="1" value="0" style="max-width:80px;" />
-				<span class="hint-text">Sekunden (0 = kein Cooldown)</span>
-			</div>
-
-			<div class="config-row">
-				<label>Video-BG</label>
-				<select data-field="backgroundVideo">
-					<option value="">Kein Video</option>
-				</select>
-			</div>
-
-			<div class="config-row">
-				<label>TTS</label>
-				<div class="toggle-group">
-					<label class="toggle" style="margin-bottom:0;">
-						<input type="checkbox" data-field="ttsEnabled" autocomplete="off" />
-						<span class="toggle-slider"></span>
-					</label>
-					<span class="hint-text">Rate:</span>
-					<input type="number" data-field="ttsRate" min="0.5" max="2" step="0.1" value="1" style="max-width:60px;" />
-					<span class="hint-text">Vol:</span>
-					<input type="number" data-field="ttsVolume" min="0" max="1" step="0.1" value="1" style="max-width:60px;" />
-				</div>
-			</div>
-
-			<div class="config-row">
-				<label>Gruppierung</label>
-				<div class="toggle-group">
-					<label class="toggle" style="margin-bottom:0;">
-						<input type="checkbox" data-field="groupEnabled" autocomplete="off" />
-						<span class="toggle-slider"></span>
-					</label>
-					<span class="hint-text">Fenster:</span>
-					<input type="number" data-field="groupWindow" min="1" max="30" step="1" value="5" style="max-width:60px;" />
-					<span class="hint-text">Sek.</span>
-				</div>
-			</div>
-
-			<div class="config-row">
-				<label>Variationen</label>
-				<div class="toggle-group">
-					<label class="toggle" style="margin-bottom:0;">
-						<input type="checkbox" data-field="variationEnabled" autocomplete="off" />
-						<span class="toggle-slider"></span>
-					</label>
-					<button class="btn-add-variation btn-secondary btn-small" data-type="${key}">+ Variation</button>
-				</div>
-			</div>
-			<div class="variations-list" data-type="${key}"></div>
-
-			<div class="config-row">
-				<label>Partikel</label>
-				<select data-field="particleEffect">
-					<option value="">Keine</option>
-					<option value="confetti">Konfetti</option>
-					<option value="stars">Sterne</option>
-					<option value="hearts">Herzen</option>
-				</select>
-			</div>
-
-			<div class="preview-container">
+			<!-- Preview always visible in header area -->
+			<div class="preview-container" style="margin-top:8px;">
 				<div class="preview-label">Vorschau</div>
 				<div class="preview-box" data-preview="${key}">
 					<div class="preview-bg-overlay"></div>
@@ -326,9 +145,267 @@ function buildEditorUI() {
 					<button class="btn-test-preview btn-secondary btn-small" data-type="${key}">Test senden</button>
 				</div>
 			</div>
+
+			<!-- Collapsible Body -->
+			<div class="alert-type-body" id="alert-body-${key}">
+				<div style="padding-top:10px;">
+
+					<!-- Group: Grundeinstellungen -->
+					<div class="settings-group">
+						<div class="settings-group-title">Grundeinstellungen</div>
+
+						<div class="config-row">
+							<label>Dauer (Sek.)</label>
+							<input type="number" data-field="duration" min="1" max="30" step="0.5" value="5" style="max-width:80px;" />
+							<span class="help-text">Wie lange der Alert sichtbar bleibt</span>
+						</div>
+
+						<div class="config-row">
+							<label>Nachricht</label>
+							<input type="text" data-field="messageTemplate" placeholder="${msgPlaceholder}" />
+						</div>
+						<span class="help-text" style="margin-top:-4px;">Verfuegbare Platzhalter: {username}, {amount}, {message}, {tier}</span>
+
+						<div class="config-row">
+							<label>Position</label>
+							<select data-field="position">
+								${buildPositionOptions()}
+							</select>
+						</div>
+					</div>
+
+					<!-- Group: Darstellung -->
+					<div class="settings-group">
+						<div class="settings-group-title">Darstellung</div>
+
+						<div class="config-row">
+							<label>Farben</label>
+							<div class="color-group">
+								<label>Hintergrund</label>
+								<input type="color" data-field="backgroundColor" value="${color}" />
+								<label>Text</label>
+								<input type="color" data-field="textColor" value="#ffffff" />
+								<label>Akzent</label>
+								<input type="color" data-field="accentColor" value="#b9a3e3" />
+							</div>
+						</div>
+
+						<div class="config-row">
+							<label>Hintergrundbild</label>
+							<select data-field="backgroundImage">
+								<option value="">Keine (Nur Farbe)</option>
+							</select>
+						</div>
+
+						<div class="config-row">
+							<label>Icon</label>
+							<select data-field="iconUrl">
+								<option value="">Standard-Emoji</option>
+							</select>
+						</div>
+
+						<div class="config-row">
+							<label>Schriftart</label>
+							<select data-field="fontFamily">
+								${buildFontOptions()}
+							</select>
+						</div>
+
+						<div class="config-row">
+							<label>Schriftgroesse</label>
+							<input type="number" data-field="fontSize" min="12" max="72" step="1" value="24" style="max-width:80px;" />
+							<span class="hint-text">px</span>
+						</div>
+
+						<div class="config-row">
+							<label>Text-Effekte</label>
+							<div class="toggle-group">
+								<span class="toggle-label">Schatten</span>
+								<label class="toggle" style="margin-bottom:0;">
+									<input type="checkbox" data-field="textShadow" autocomplete="off" />
+									<span class="toggle-slider"></span>
+								</label>
+								<input type="color" data-field="textShadowColor" value="#000000" title="Schattenfarbe" />
+								<span class="toggle-label">Outline</span>
+								<label class="toggle" style="margin-bottom:0;">
+									<input type="checkbox" data-field="textOutline" autocomplete="off" />
+									<span class="toggle-slider"></span>
+								</label>
+								<input type="color" data-field="textOutlineColor" value="#000000" title="Outlinefarbe" />
+							</div>
+						</div>
+
+						<div class="config-row">
+							<label>Overlay-Deckkraft</label>
+							<input type="range" data-field="overlayOpacity" min="0" max="1" step="0.05" value="0.7" style="flex:1;" />
+							<span class="range-value" data-label="overlayOpacity">0.70</span>
+						</div>
+					</div>
+
+					<!-- Group: Animation -->
+					<div class="settings-group">
+						<div class="settings-group-title">Animation</div>
+
+						<div class="config-row">
+							<label>Animations-Typ</label>
+							<select data-field="animation">
+								<option value="slide">Slide</option>
+								<option value="fade">Fade</option>
+								<option value="bounce">Bounce</option>
+							</select>
+						</div>
+
+						<div class="config-row">
+							<label>Animations-Geschwindigkeit</label>
+							<span class="hint-text">Rein:</span>
+							<input type="number" data-field="animationInDuration" min="100" max="3000" step="50" value="500" style="max-width:80px;" />
+							<span class="hint-text">Raus:</span>
+							<input type="number" data-field="animationOutDuration" min="100" max="3000" step="50" value="400" style="max-width:80px;" />
+							<span class="hint-text">ms</span>
+						</div>
+
+						<div class="config-row">
+							<label>Sound</label>
+							<label class="toggle" style="margin-bottom:0;">
+								<input type="checkbox" data-field="soundEnabled" autocomplete="off" />
+								<span class="toggle-slider"></span>
+							</label>
+						</div>
+					</div>
+
+					<!-- Group: Erweitert (Collapsible) -->
+					<div class="advanced-toggle" data-advanced-target="advanced-${key}">
+						<span class="chevron">&#9654;</span>
+						Erweiterte Einstellungen
+					</div>
+					<div class="advanced-body" id="advanced-${key}">
+						<div class="settings-group">
+
+							<div class="config-row">
+								<label>Prioritaet</label>
+								<input type="number" data-field="priority" min="1" max="10" step="1" value="${DEFAULT_PRIORITIES[key] || 5}" style="max-width:80px;" />
+							</div>
+							<span class="help-text" style="margin-top:-4px;">1 (niedrig) bis 10 (hoch) &ndash; bestimmt die Reihenfolge in der Queue</span>
+
+							<div class="config-row">
+								<label>Min. Betrag</label>
+								<input type="number" data-field="minAmount" min="0" step="1" value="0" style="max-width:80px;" />
+								<span class="hint-text">0 = kein Filter</span>
+							</div>
+
+							<div class="config-row">
+								<label>Min. Tier</label>
+								<select data-field="minTier" style="max-width:140px;">
+									<option value="">Alle Tiers</option>
+									<option value="1000">Tier 1+</option>
+									<option value="2000">Tier 2+</option>
+									<option value="3000">Nur Tier 3</option>
+								</select>
+							</div>
+
+							<div class="config-row">
+								<label>Cooldown</label>
+								<input type="number" data-field="cooldown" min="0" step="1" value="0" style="max-width:80px;" />
+								<span class="hint-text">Sekunden (0 = kein Cooldown)</span>
+							</div>
+
+							<div class="config-row">
+								<label>Video-Hintergrund</label>
+								<select data-field="backgroundVideo">
+									<option value="">Kein Video</option>
+								</select>
+							</div>
+
+							<div class="config-row">
+								<label>Text-to-Speech</label>
+								<div class="toggle-group">
+									<label class="toggle" style="margin-bottom:0;">
+										<input type="checkbox" data-field="ttsEnabled" autocomplete="off" />
+										<span class="toggle-slider"></span>
+									</label>
+									<span class="hint-text">Rate:</span>
+									<input type="number" data-field="ttsRate" min="0.5" max="2" step="0.1" value="1" style="max-width:60px;" />
+									<span class="hint-text">Vol:</span>
+									<input type="number" data-field="ttsVolume" min="0" max="1" step="0.1" value="1" style="max-width:60px;" />
+								</div>
+							</div>
+
+							<div class="config-row">
+								<label>Gruppierung</label>
+								<div class="toggle-group">
+									<label class="toggle" style="margin-bottom:0;">
+										<input type="checkbox" data-field="groupEnabled" autocomplete="off" />
+										<span class="toggle-slider"></span>
+									</label>
+									<span class="hint-text">Fenster:</span>
+									<input type="number" data-field="groupWindow" min="1" max="30" step="1" value="5" style="max-width:60px;" />
+									<span class="hint-text">Sek.</span>
+								</div>
+							</div>
+							<span class="help-text" style="margin-top:-4px;">Fasst mehrere gleichartige Events innerhalb des Zeitfensters zusammen</span>
+
+							<div class="config-row">
+								<label>Variationen</label>
+								<div class="toggle-group">
+									<label class="toggle" style="margin-bottom:0;">
+										<input type="checkbox" data-field="variationEnabled" autocomplete="off" />
+										<span class="toggle-slider"></span>
+									</label>
+									<button class="btn-add-variation btn-secondary btn-small" data-type="${key}">+ Variation</button>
+								</div>
+							</div>
+							<span class="help-text" style="margin-top:-4px;">Zufaellige Farbvarianten fuer visuellere Abwechslung</span>
+							<div class="variations-list" data-type="${key}"></div>
+
+							<div class="config-row">
+								<label>Partikel-Effekt</label>
+								<select data-field="particleEffect">
+									<option value="">Keine</option>
+									<option value="confetti">Konfetti</option>
+									<option value="stars">Sterne</option>
+									<option value="hearts">Herzen</option>
+								</select>
+							</div>
+							<span class="help-text" style="margin-top:-4px;">Animierte Effekte die beim Alert erscheinen</span>
+
+							<div class="config-row" style="align-items:flex-start;">
+								<label>Custom CSS</label>
+								<textarea data-field="customCss" rows="3" style="flex:1;font-family:monospace;font-size:12px;resize:vertical;" placeholder="#alert-box { border: 3px solid gold; }&#10;.alert-username { text-transform: uppercase; }"></textarea>
+							</div>
+							<span class="help-text" style="margin-top:-4px;">CSS-Regeln die direkt auf den Alert angewendet werden</span>
+
+						</div>
+					</div>
+
+				</div>
+			</div>
 		</div>
 	`;
 	}).join('');
+
+	// Collapsible alert type headers
+	container.querySelectorAll('.alert-type-header').forEach((header) => {
+		header.addEventListener('click', (e) => {
+			// Don't toggle when clicking on the toggle switch
+			if (e.target.closest('.toggle')) return;
+			const targetId = header.dataset.collapseTarget;
+			const body = document.getElementById(targetId);
+			const chevron = header.querySelector('.chevron');
+			if (body) body.classList.toggle('open');
+			if (chevron) chevron.classList.toggle('open');
+		});
+	});
+
+	// Advanced settings toggles
+	container.querySelectorAll('.advanced-toggle').forEach((toggle) => {
+		toggle.addEventListener('click', () => {
+			const targetId = toggle.dataset.advancedTarget;
+			const body = document.getElementById(targetId);
+			const chevron = toggle.querySelector('.chevron');
+			if (body) body.classList.toggle('open');
+			if (chevron) chevron.classList.toggle('open');
+		});
+	});
 
 	// Play preview animation buttons
 	container.querySelectorAll('.btn-play-preview').forEach((btn) => {
@@ -473,7 +550,7 @@ function updatePreview(key) {
 		previewBox.style.fontFamily = '';
 	}
 
-	// Scale font size for preview (×0.67)
+	// Scale font size for preview (x0.67)
 	const previewUsername = previewBox.querySelector('.alert-username');
 	previewUsername.style.fontSize = Math.round(fontSize * 0.67) + 'px';
 	previewUsername.style.color = accentColor;
@@ -833,7 +910,7 @@ function importConfig(file) {
 		try {
 			const parsed = JSON.parse(e.target.result);
 			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-				alert('Ungültige Config-Datei: Erwartet wird ein JSON-Objekt.');
+				alert('Ungueltige Config-Datei: Erwartet wird ein JSON-Objekt.');
 				return;
 			}
 			const cleaned = {};
@@ -843,13 +920,13 @@ function importConfig(file) {
 				}
 			}
 			if (Object.keys(cleaned).length === 0) {
-				alert('Keine gültigen Alert-Typen in der Datei gefunden.');
+				alert('Keine gueltigen Alert-Typen in der Datei gefunden.');
 				return;
 			}
 			alertConfig.value = cleaned;
 			loadConfig(cleaned);
 		} catch {
-			alert('Fehler beim Lesen der Datei: Ungültiges JSON.');
+			alert('Fehler beim Lesen der Datei: Ungueltiges JSON.');
 		}
 	};
 	reader.readAsText(file);
@@ -972,7 +1049,7 @@ function applyTheme(themeName) {
 
 document.querySelectorAll('.btn-theme').forEach((btn) => {
 	btn.addEventListener('click', () => {
-		if (confirm(`Theme "${btn.dataset.theme}" anwenden? Visuelle Einstellungen werden überschrieben.`)) {
+		if (confirm(`Theme "${btn.dataset.theme}" anwenden? Visuelle Einstellungen werden ueberschrieben.`)) {
 			applyTheme(btn.dataset.theme);
 		}
 	});

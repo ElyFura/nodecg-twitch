@@ -31,6 +31,33 @@
 				margin-left: auto;
 				flex-shrink: 0;
 			}
+			.stats-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 8px;
+				text-align: center;
+			}
+			.stat-item {
+				padding: 6px 4px;
+				border-radius: 4px;
+				background: rgba(255,255,255,0.03);
+			}
+			.stat-item .stat-value {
+				font-size: 18px;
+				font-weight: 700;
+				color: #e0e0e0;
+				margin-top: 4px;
+			}
+			.stat-item .stat-value.highlight {
+				color: #b9a3e3;
+			}
+			.stat-session-info {
+				font-size: 11px;
+				color: #7f8c8d;
+				margin-top: 8px;
+				padding-top: 6px;
+				border-top: 1px solid #2a2a4a;
+			}
 		</style>
 	</head>
 	<body>
@@ -40,6 +67,29 @@
 		<div id="connection-status" class="status-indicator status-disconnected">
 			<span class="status-dot"></span>
 			<span id="status-text">Nicht verbunden</span>
+		</div>
+
+		<!-- Alert Statistics (moved to top) -->
+		<div class="card">
+			<h3>Statistiken</h3>
+			<div id="stats-display" class="stats-grid">
+				<div class="stat-item"><span class="alert-type-badge badge-follow">Follow</span><div class="stat-value" id="stat-follow">0</div></div>
+				<div class="stat-item"><span class="alert-type-badge badge-sub">Sub</span><div class="stat-value" id="stat-sub">0</div></div>
+				<div class="stat-item"><span class="alert-type-badge badge-resub">Resub</span><div class="stat-value" id="stat-resub">0</div></div>
+				<div class="stat-item"><span class="alert-type-badge badge-subgift">Gift Sub</span><div class="stat-value" id="stat-subgift">0</div></div>
+				<div class="stat-item"><span class="alert-type-badge badge-bits">Bits</span><div class="stat-value" id="stat-bits">0</div></div>
+				<div class="stat-item"><span class="alert-type-badge badge-raid">Raid</span><div class="stat-value" id="stat-raid">0</div></div>
+				<div class="stat-item"><span class="alert-type-badge badge-channelpoints">Channel Points</span><div class="stat-value" id="stat-channelpoints">0</div></div>
+				<div class="stat-item"><strong style="color:#b9a3e3;">Gesamt</strong><div class="stat-value highlight" id="stat-total">0</div></div>
+			</div>
+			<div class="stat-session-info">
+				Bits gesamt: <strong id="stat-bits-total">0</strong>
+				&nbsp;&bull;&nbsp;
+				Session gestartet: <span id="stat-session">-</span>
+			</div>
+			<div class="btn-group" style="margin-top:8px;">
+				<button id="btn-reset-stats" class="btn-secondary btn-small">Statistiken zuruecksetzen</button>
+			</div>
 		</div>
 
 		<!-- Current Alert -->
@@ -58,89 +108,94 @@
 				</label>
 				<span id="pause-label" style="font-size: 12px; font-weight: 600; color: #ccc;">Alerts aktiv</span>
 			</div>
+			<span class="help-text">Wenn pausiert, werden neue Events in die Queue eingereiht aber nicht im Overlay angezeigt.</span>
 			<ul id="queue-list" class="queue-list">
 				<li class="empty-state">Queue ist leer</li>
 			</ul>
 			<div class="btn-group" style="margin-top: 8px;">
-				<button id="btn-skip" class="btn-secondary btn-small">Alert überspringen</button>
+				<button id="btn-skip" class="btn-secondary btn-small">Alert ueberspringen</button>
 				<button id="btn-clear" class="btn-danger btn-small">Queue leeren</button>
 			</div>
 		</div>
 
-		<!-- Test Triggers -->
+		<!-- Test Triggers (Collapsible) -->
 		<div class="card">
-			<h3>Test Alerts</h3>
-			<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;">
-				<div style="display:flex;flex-direction:column;gap:2px;">
-					<label style="font-size:11px;color:#7f8c8d;">Typ</label>
-					<select id="test-type" style="width:130px;">
-						<option value="follow">Follow</option>
-						<option value="sub">Sub</option>
-						<option value="resub">Resub</option>
-						<option value="subgift">Gift Sub</option>
-						<option value="bits">Bits</option>
-						<option value="raid">Raid</option>
-						<option value="channelpoints">Channel Points</option>
-					</select>
-				</div>
-				<div style="display:flex;flex-direction:column;gap:2px;">
-					<label style="font-size:11px;color:#7f8c8d;">Username</label>
-					<input type="text" id="test-username" placeholder="TestUser" style="width:120px;" />
-				</div>
-				<div style="display:flex;flex-direction:column;gap:2px;">
-					<label style="font-size:11px;color:#7f8c8d;">Message</label>
-					<input type="text" id="test-message" placeholder="(optional)" style="width:150px;" />
-				</div>
-				<div style="display:flex;flex-direction:column;gap:2px;">
-					<label style="font-size:11px;color:#7f8c8d;">Amount</label>
-					<input type="number" id="test-amount" placeholder="0" style="width:70px;" />
-				</div>
-				<button id="btn-test-custom" class="btn-primary btn-small">Test senden</button>
+			<div class="collapsible-header" data-target="test-alerts-content">
+				<h3 style="margin:0;">Test Alerts</h3>
+				<span class="chevron">&#9654;</span>
 			</div>
-			<div class="btn-group">
-				<button class="btn-test btn-primary btn-small" data-type="follow">Follow</button>
-				<button class="btn-test btn-primary btn-small" data-type="sub">Sub</button>
-				<button class="btn-test btn-primary btn-small" data-type="resub">Resub</button>
-				<button class="btn-test btn-primary btn-small" data-type="subgift">Gift Sub</button>
-				<button class="btn-test btn-small" data-type="bits" style="background:#ff8c00;color:#fff;">Bits</button>
-				<button class="btn-test btn-small" data-type="raid" style="background:#e91916;color:#fff;">Raid</button>
-				<button class="btn-test btn-small" data-type="channelpoints" style="background:#00c896;color:#fff;">Channel Points</button>
+			<div class="collapsible-content" id="test-alerts-content">
+				<div style="padding-top:8px;">
+					<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;">
+						<div style="display:flex;flex-direction:column;gap:2px;">
+							<label style="font-size:11px;color:#7f8c8d;">Typ</label>
+							<select id="test-type" style="width:130px;">
+								<option value="follow">Follow</option>
+								<option value="sub">Sub</option>
+								<option value="resub">Resub</option>
+								<option value="subgift">Gift Sub</option>
+								<option value="bits">Bits</option>
+								<option value="raid">Raid</option>
+								<option value="channelpoints">Channel Points</option>
+							</select>
+						</div>
+						<div style="display:flex;flex-direction:column;gap:2px;">
+							<label style="font-size:11px;color:#7f8c8d;">Username</label>
+							<input type="text" id="test-username" placeholder="TestUser" style="width:120px;" />
+						</div>
+						<div style="display:flex;flex-direction:column;gap:2px;">
+							<label style="font-size:11px;color:#7f8c8d;">Nachricht</label>
+							<input type="text" id="test-message" placeholder="(optional)" style="width:150px;" />
+						</div>
+						<div style="display:flex;flex-direction:column;gap:2px;">
+							<label style="font-size:11px;color:#7f8c8d;">Betrag</label>
+							<input type="number" id="test-amount" placeholder="0" style="width:70px;" />
+						</div>
+						<button id="btn-test-custom" class="btn-primary btn-small">Test senden</button>
+					</div>
+
+					<hr class="section-divider" />
+
+					<span class="help-text" style="margin-bottom:6px;">Schnelltest-Buttons (senden sofort mit Standardwerten):</span>
+					<div class="btn-group">
+						<button class="btn-test btn-primary btn-small" data-type="follow">Follow</button>
+						<button class="btn-test btn-primary btn-small" data-type="sub">Sub</button>
+						<button class="btn-test btn-primary btn-small" data-type="resub">Resub</button>
+						<button class="btn-test btn-primary btn-small" data-type="subgift">Gift Sub</button>
+						<button class="btn-test btn-small" data-type="bits" style="background:#ff8c00;color:#fff;">Bits</button>
+						<button class="btn-test btn-small" data-type="raid" style="background:#e91916;color:#fff;">Raid</button>
+						<button class="btn-test btn-small" data-type="channelpoints" style="background:#00c896;color:#fff;">Channel Points</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
-		<!-- Alert Statistics -->
+		<!-- Goals (Collapsible) -->
 		<div class="card">
-			<h3>Statistiken</h3>
-			<div id="stats-display" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:11px;text-align:center;">
-				<div><span class="alert-type-badge badge-follow">Follow</span><div id="stat-follow">0</div></div>
-				<div><span class="alert-type-badge badge-sub">Sub</span><div id="stat-sub">0</div></div>
-				<div><span class="alert-type-badge badge-resub">Resub</span><div id="stat-resub">0</div></div>
-				<div><span class="alert-type-badge badge-subgift">Gift</span><div id="stat-subgift">0</div></div>
-				<div><span class="alert-type-badge badge-bits">Bits</span><div id="stat-bits">0</div></div>
-				<div><span class="alert-type-badge badge-raid">Raid</span><div id="stat-raid">0</div></div>
-				<div><span class="alert-type-badge badge-channelpoints">CP</span><div id="stat-channelpoints">0</div></div>
-				<div><strong style="color:#b9a3e3;">Gesamt</strong><div id="stat-total" style="font-weight:700;color:#b9a3e3;">0</div></div>
+			<div class="collapsible-header" data-target="goals-content">
+				<h3 style="margin:0;">Goals</h3>
+				<span class="chevron">&#9654;</span>
 			</div>
-			<div style="font-size:10px;color:#7f8c8d;margin-top:4px;">Bits gesamt: <span id="stat-bits-total">0</span> | Session: <span id="stat-session">-</span></div>
-			<div class="btn-group" style="margin-top:6px;">
-				<button id="btn-reset-stats" class="btn-secondary btn-small">Statistiken zurücksetzen</button>
+			<div class="collapsible-content" id="goals-content">
+				<div id="goals-container" style="padding-top:8px;"></div>
 			</div>
 		</div>
 
-		<!-- Goals -->
+		<!-- Alert History (Collapsible, default closed) -->
 		<div class="card">
-			<h3>Goals</h3>
-			<div id="goals-container"></div>
-		</div>
-
-		<!-- Alert History -->
-		<div class="card">
-			<h3>Alert-Verlauf</h3>
-			<ul id="history-list" class="history-list">
-				<li class="empty-state">Noch keine Alerts</li>
-			</ul>
-			<div class="btn-group" style="margin-top: 8px;">
-				<button id="btn-clear-history" class="btn-secondary btn-small">Verlauf leeren</button>
+			<div class="collapsible-header" data-target="history-content">
+				<h3 style="margin:0;">Alert-Verlauf</h3>
+				<span class="chevron">&#9654;</span>
+			</div>
+			<div class="collapsible-content" id="history-content">
+				<div style="padding-top:8px;">
+					<ul id="history-list" class="history-list">
+						<li class="empty-state">Noch keine Alerts</li>
+					</ul>
+					<div class="btn-group" style="margin-top: 8px;">
+						<button id="btn-clear-history" class="btn-secondary btn-small">Verlauf leeren</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
