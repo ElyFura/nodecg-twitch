@@ -244,6 +244,30 @@ module.exports = function (nodecg) {
 
 	nodecg.mount('/nodecg-twitch', router);
 
+	// --- Clean up stale EventSub subscriptions ---
+	async function cleanupOldSubscriptions() {
+		if (!apiClient) return;
+		try {
+			const subs = await apiClient.eventSub.getSubscriptions();
+			const staleSubs = subs.data.filter(
+				(s) => s.status === 'websocket_disconnected' || s.status === 'notification_failures_exceeded',
+			);
+			if (staleSubs.length > 0) {
+				nodecg.log.info(`Lösche ${staleSubs.length} alte EventSub-Subscriptions...`);
+				for (const sub of staleSubs) {
+					try {
+						await apiClient.eventSub.deleteSubscription(sub.id);
+					} catch (err) {
+						nodecg.log.warn(`Subscription ${sub.id} löschen fehlgeschlagen: ${err.message}`);
+					}
+				}
+				nodecg.log.info('Alte Subscriptions bereinigt.');
+			}
+		} catch (err) {
+			nodecg.log.warn('EventSub-Subscription Cleanup fehlgeschlagen:', err.message);
+		}
+	}
+
 	// --- Twitch Connection ---
 	async function tryConnect() {
 		// Disconnect existing listener
@@ -289,6 +313,9 @@ module.exports = function (nodecg) {
 			);
 
 			apiClient = new ApiClient({ authProvider });
+
+			// Clean up stale subscriptions before creating new ones
+			await cleanupOldSubscriptions();
 
 			// Resolve channel name to user ID
 			const user = await apiClient.users.getUserByName(channelName);
@@ -433,6 +460,19 @@ module.exports = function (nodecg) {
 				}
 			});
 
+			// Handle WebSocket disconnect/errors with auto-reconnect
+			listener.onUserSocketDisconnect(userId, (error) => {
+				nodecg.log.warn('EventSub WebSocket getrennt:', error ? error.message : 'Unbekannt');
+				connectionStatus.value = {
+					status: 'error',
+					message: `WebSocket getrennt: ${error ? error.message : 'Verbindung verloren'}. Reconnect in 10s...`,
+				};
+				setTimeout(() => {
+					nodecg.log.info('Versuche erneute Verbindung...');
+					tryConnect();
+				}, 10000);
+			});
+
 			listener.start();
 			await fetchBadgeUrls(userId);
 
@@ -447,6 +487,12 @@ module.exports = function (nodecg) {
 				status: 'error',
 				message: `Verbindungsfehler: ${err.message}`,
 			};
+
+			// Auto-retry on transient errors (DNS, network)
+			if (err.code === 'EAI_AGAIN' || err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
+				nodecg.log.info('Netzwerkfehler erkannt, erneuter Versuch in 15s...');
+				setTimeout(() => tryConnect(), 15000);
+			}
 		}
 	}
 
