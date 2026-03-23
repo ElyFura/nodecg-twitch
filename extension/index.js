@@ -461,7 +461,7 @@ module.exports = function (nodecg) {
 			});
 
 			// Handle WebSocket disconnect/errors with auto-reconnect
-			listener.onUserSocketDisconnect(userId, (error) => {
+			listener.onUserSocketDisconnect((disconnectedUserId, error) => {
 				nodecg.log.warn('EventSub WebSocket getrennt:', error ? error.message : 'Unbekannt');
 				connectionStatus.value = {
 					status: 'error',
