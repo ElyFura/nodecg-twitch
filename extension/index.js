@@ -42,6 +42,31 @@ module.exports = function (nodecg) {
 	let listener = null;
 	let apiClient = null;
 	let badgeUrlMap = {}; // { "broadcaster/1": "https://...", ... }
+	let isReconnecting = false;
+	let reconnectAttempts = 0;
+	let reconnectTimer = null;
+
+	// Intercept uncaught network errors (e.g. DNS failures in twurple WebSocket)
+	// that would otherwise crash the entire NodeCG process.
+	// We must intercept BEFORE NodeCG's own handler which calls process.exit().
+	const NETWORK_ERROR_CODES = new Set([
+		'EAI_AGAIN', 'ENOTFOUND', 'ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'EPIPE', 'EHOSTUNREACH',
+	]);
+	const originalUncaughtListeners = process.rawListeners('uncaughtException').slice();
+	process.removeAllListeners('uncaughtException');
+	process.on('uncaughtException', (err, origin) => {
+		const code = err.code || (err.cause && err.cause.code);
+		if (NETWORK_ERROR_CODES.has(code)) {
+			nodecg.log.warn(`Netzwerkfehler abgefangen (${code}): ${err.message} — plane Reconnect`);
+			isReconnecting = false;
+			scheduleReconnect(`Netzwerkfehler: ${code}`);
+			return; // swallow — do NOT call original handlers which would exit
+		}
+		// Non-network errors: delegate to original handlers (NodeCG's crash handler etc.)
+		for (const fn of originalUncaughtListeners) {
+			fn(err, origin);
+		}
+	});
 
 	async function fetchBadgeUrls(userId) {
 		if (!apiClient) return;
@@ -269,7 +294,29 @@ module.exports = function (nodecg) {
 	}
 
 	// --- Twitch Connection ---
+	function scheduleReconnect(reason) {
+		if (reconnectTimer) return; // already scheduled
+		const delay = Math.min(10000 * Math.pow(2, reconnectAttempts), 300000); // 10s, 20s, 40s, ... max 5min
+		reconnectAttempts++;
+		nodecg.log.info(`Reconnect #${reconnectAttempts} in ${Math.round(delay / 1000)}s (${reason})`);
+		connectionStatus.value = {
+			status: 'error',
+			message: `${reason}. Reconnect in ${Math.round(delay / 1000)}s...`,
+		};
+		reconnectTimer = setTimeout(() => {
+			reconnectTimer = null;
+			tryConnect();
+		}, delay);
+	}
+
 	async function tryConnect() {
+		// Prevent concurrent reconnection attempts
+		if (isReconnecting) {
+			nodecg.log.warn('Reconnect bereits aktiv, überspringe...');
+			return;
+		}
+		isReconnecting = true;
+
 		// Disconnect existing listener
 		if (listener) {
 			try {
@@ -281,6 +328,7 @@ module.exports = function (nodecg) {
 		const { clientId, clientSecret, accessToken, refreshToken, channelName } = settings.value;
 
 		if (!clientId || !clientSecret || !accessToken || !channelName) {
+			isReconnecting = false;
 			connectionStatus.value = {
 				status: 'disconnected',
 				message: 'Fehlende Einstellungen. Bitte Client ID, Secret und Kanalname eintragen und mit Twitch verbinden.',
@@ -463,18 +511,15 @@ module.exports = function (nodecg) {
 			// Handle WebSocket disconnect/errors with auto-reconnect
 			listener.onUserSocketDisconnect((disconnectedUserId, error) => {
 				nodecg.log.warn('EventSub WebSocket getrennt:', error ? error.message : 'Unbekannt');
-				connectionStatus.value = {
-					status: 'error',
-					message: `WebSocket getrennt: ${error ? error.message : 'Verbindung verloren'}. Reconnect in 10s...`,
-				};
-				setTimeout(() => {
-					nodecg.log.info('Versuche erneute Verbindung...');
-					tryConnect();
-				}, 10000);
+				scheduleReconnect(`WebSocket getrennt: ${error ? error.message : 'Verbindung verloren'}`);
 			});
 
 			listener.start();
 			await fetchBadgeUrls(userId);
+
+			// Success — reset reconnect backoff
+			reconnectAttempts = 0;
+			isReconnecting = false;
 
 			connectionStatus.value = {
 				status: 'connected',
@@ -482,16 +527,18 @@ module.exports = function (nodecg) {
 			};
 			nodecg.log.info(`Twitch EventSub verbunden: ${channelName}`);
 		} catch (err) {
+			isReconnecting = false;
 			nodecg.log.error('Twitch Verbindungsfehler:', err);
-			connectionStatus.value = {
-				status: 'error',
-				message: `Verbindungsfehler: ${err.message}`,
-			};
 
-			// Auto-retry on transient errors (DNS, network)
-			if (err.code === 'EAI_AGAIN' || err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
-				nodecg.log.info('Netzwerkfehler erkannt, erneuter Versuch in 15s...');
-				setTimeout(() => tryConnect(), 15000);
+			// Auto-retry on transient/rate-limit errors
+			if (err.code === 'EAI_AGAIN' || err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED'
+				|| (err.message && err.message.includes('rate limit'))) {
+				scheduleReconnect(`Verbindungsfehler: ${err.message}`);
+			} else {
+				connectionStatus.value = {
+					status: 'error',
+					message: `Verbindungsfehler: ${err.message}`,
+				};
 			}
 		}
 	}
@@ -660,10 +707,22 @@ module.exports = function (nodecg) {
 	});
 
 	nodecg.listenFor('reconnect', async () => {
+		reconnectAttempts = 0;
+		if (reconnectTimer) {
+			clearTimeout(reconnectTimer);
+			reconnectTimer = null;
+		}
+		isReconnecting = false;
 		await tryConnect();
 	});
 
 	nodecg.listenFor('disconnect', () => {
+		if (reconnectTimer) {
+			clearTimeout(reconnectTimer);
+			reconnectTimer = null;
+		}
+		isReconnecting = false;
+		reconnectAttempts = 0;
 		if (listener) {
 			try {
 				listener.stop();

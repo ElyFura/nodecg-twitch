@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /E/NodeCG/nodecg-twitch/bundles/nodecg-twitch/extension -type f -name \"*.ts\" 2>/dev/null | head -20)",
+      "Bash(cd \"E:/NodeCG/nodecg-twitch/bundles/nodecg-twitch\" && sed -n '488,499p' extension/index.js | xxd | head -5)",
+      "Bash(cd \"E:/NodeCG/nodecg-twitch/bundles/nodecg-twitch\" && node -c extension/index.js && echo \"Syntax OK\")"
+    ]
+  }
+}
